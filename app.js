@@ -2265,6 +2265,22 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const firebaseConfig = {
+        apiKey: "AIzaSyC_HPtUiLt4ZyMpfgnUZf7yMbya7ePGlgg",
+        authDomain: "diplom21.firebaseapp.com",
+        projectId: "diplom21",
+        storageBucket: "diplom21.firebasestorage.app",
+        messagingSenderId: "689518163318",
+        appId: "1:689518163318:web:1763693cb1399e2304f657",
+        measurementId: "G-KVMR59WDVC"
+    };
+    
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
     // Восстановление последней страницы
     const savedPage = localStorage.getItem('lastPage');
     const savedParams = localStorage.getItem('lastPageParams');
@@ -2386,4 +2402,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Сохранение пользователя в админке
     document.getElementById('edit-user-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveUser(); });
     document.getElementById('cancel-edit-user')?.addEventListener('click', () => closeModal('edit-user-modal'));
+
+    auth.onAuthStateChanged(async (user) => {
+    if (isSeeding) return;
+    if (user) {
+        try {
+            const doc = await db.collection('users').doc(user.uid).get();
+            currentUser = { uid: user.uid, email: user.email, ...(doc.data() || { role: 'client' }) };
+            localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+        } catch(e) { currentUser = { uid: user.uid, email: user.email, role: 'client' }; }
+    } else {
+        currentUser = null;
+        localStorage.removeItem('beautyUser');
+    }
+    updateAuthUI();
+    if (currentPage) showPage(currentPage, currentPageParams);
+});
+
 });
