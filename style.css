@@ -1,11 +1,12 @@
 :root {
-    --primary: #2ecc71;
-    --primary-dark: #27ae60;
-    --secondary: #d5f5e3;
-    --accent: #1abc9c;
+    --primary: #00A779;
+    --primary-dark: #006D4F;
+    --primary-light: #35D3A7;
+    --secondary: #e6f7f0;
+    --accent: #35D3A7;
     --text: #2d2d2d;
     --text-light: #666;
-    --background: #f8fef9;
+    --background: #f6fef9;
     --card-bg: #ffffff;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
@@ -169,7 +170,7 @@ nav ul {
 }
 
 .btn-secondary:hover {
-    background: #c8f0d9;
+    background: #d9f0e6;
 }
 
 .btn-outline {
@@ -881,7 +882,7 @@ footer {
 /* Selected card styles */
 .card.selected {
     border: 2px solid var(--primary);
-    background-color: #f0fff4;
+    background-color: #eafaf3;
     transform: scale(1.02);
 }
 
