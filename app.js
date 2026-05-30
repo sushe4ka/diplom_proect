@@ -2249,21 +2249,7 @@ function updateAuthUI() {
     }
 }
 
-auth.onAuthStateChanged(async (user) => {
-    if (isSeeding) return;
-    if (user) {
-        try {
-            const doc = await db.collection('users').doc(user.uid).get();
-            currentUser = { uid: user.uid, email: user.email, ...(doc.data() || { role: 'client' }) };
-            localStorage.setItem('beautyUser', JSON.stringify(currentUser));
-        } catch(e) { currentUser = { uid: user.uid, email: user.email, role: 'client' }; }
-    } else {
-        currentUser = null;
-        localStorage.removeItem('beautyUser');
-    }
-    updateAuthUI();
-    if (currentPage) showPage(currentPage, currentPageParams);
-});
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Инициализация Firebase
@@ -2502,4 +2488,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('cancel-edit-user')?.addEventListener('click', () => closeModal('edit-user-modal'));
 
+});
+
+auth.onAuthStateChanged(async (user) => {
+    if (isSeeding) return;
+    if (user) {
+        try {
+            const doc = await db.collection('users').doc(user.uid).get();
+            currentUser = { uid: user.uid, email: user.email, ...(doc.data() || { role: 'client' }) };
+            localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+        } catch(e) { currentUser = { uid: user.uid, email: user.email, role: 'client' }; }
+    } else {
+        currentUser = null;
+        localStorage.removeItem('beautyUser');
+    }
+    updateAuthUI();
+    if (currentPage) showPage(currentPage, currentPageParams);
 });
