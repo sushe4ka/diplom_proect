@@ -15,16 +15,18 @@
 // const auth = firebase.auth();
 
 // Включение офлайн-персистенса (кеширование данных)
-db.enablePersistence()
-    .catch(err => {
-        if (err.code === 'failed-precondition') console.warn('Несколько вкладок открыто, persistence не включён');
-        else if (err.code === 'unimplemented') console.warn('Браузер не поддерживает persistence');
-        else console.warn('Ошибка persistence:', err);
-    });
+// db.enablePersistence()
+//     .catch(err => {
+//         if (err.code === 'failed-precondition') console.warn('Несколько вкладок открыто, persistence не включён');
+//         else if (err.code === 'unimplemented') console.warn('Браузер не поддерживает persistence');
+//         else console.warn('Ошибка persistence:', err);
+//     });
 
 // ==============================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // ==============================================
+
+let db, auth; // ← Объявляем, но НЕ инициализируем сразу
 let currentUser = null;
 let currentSalon = null;
 let selectedService = null;
@@ -45,7 +47,6 @@ let bookingMastersCache = [];
 let navigationHistory = [];
 const maxHistorySteps = 50;
 let pendingOps = JSON.parse(localStorage.getItem('pendingOps') || '[]');
-
 // ==============================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ==============================================
@@ -2284,6 +2285,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Присваиваем глобальным переменным
     db = firebase.firestore();
     auth = firebase.auth();
+
+    try {
+        await db.enablePersistence({ synchronizeTabs: true });
+        console.log('✅ Offline persistence enabled');
+    } catch (err) {
+        if (err.code === 'failed-precondition') {
+            console.warn('⚠️ Persistence: несколько вкладок открыто — используем онлайн-режим');
+        } else if (err.code === 'unimplemented') {
+            console.warn('⚠️ Persistence: браузер не поддерживает');
+        } else {
+            console.warn('⚠️ Ошибка persistence:', err);
+        }
+    }
+
 
     // Восстановление состояния аутентификации
     auth.onAuthStateChanged(async (user) => {
