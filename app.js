@@ -26,7 +26,7 @@
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // ==============================================
 
-let db, auth; // ← Объявляем, но НЕ инициализируем сразу
+let db, auth; // Объявляем глобально, но не инициализируем сразу
 let currentUser = null;
 let currentSalon = null;
 let selectedService = null;
