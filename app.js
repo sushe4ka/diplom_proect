@@ -2266,7 +2266,7 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 🔥 FIREBASE INIT (внутри DOMContentLoaded)
+    // 1. Инициализация Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyC_HPtUiLt4ZyMpfgnUZf7yMbya7ePGlgg",
         authDomain: "diplom21.firebaseapp.com",
@@ -2277,7 +2277,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         measurementId: "G-KVMR59WDVC"
     };
     
-    // Инициализируем только если еще не инициализировано
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -2286,46 +2285,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     db = firebase.firestore();
     auth = firebase.auth();
 
+    // 2. Включение офлайн-режима (безопасно внутри DOMContentLoaded)
     try {
         await db.enablePersistence({ synchronizeTabs: true });
         console.log('✅ Offline persistence enabled');
     } catch (err) {
         if (err.code === 'failed-precondition') {
-            console.warn('⚠️ Persistence: несколько вкладок открыто — используем онлайн-режим');
+            console.warn('⚠️ Persistence: несколько вкладок открыто');
         } else if (err.code === 'unimplemented') {
             console.warn('⚠️ Persistence: браузер не поддерживает');
-        } else {
-            console.warn('⚠️ Ошибка persistence:', err);
         }
     }
 
-
-    // Восстановление состояния аутентификации
+    // 3. Отслеживание авторизации
     auth.onAuthStateChanged(async (user) => {
-        if (isSeeding) return;
+        if (typeof isSeeding !== 'undefined' && isSeeding) return;
+        
         if (user) {
             try {
                 const doc = await db.collection('users').doc(user.uid).get();
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    ...(doc.data() || { role: 'client' })
+                currentUser = { 
+                    uid: user.uid, 
+                    email: user.email, 
+                    ...(doc.data() || { role: 'client' }) 
                 };
                 localStorage.setItem('beautyUser', JSON.stringify(currentUser));
-            } catch(e) {
-                currentUser = { uid: user.uid, email: user.email, role: 'client' };
+            } catch(e) { 
+                currentUser = { uid: user.uid, email: user.email, role: 'client' }; 
             }
         } else {
             currentUser = null;
             localStorage.removeItem('beautyUser');
         }
-        updateAuthUI();
-        if (currentPage) showPage(currentPage, currentPageParams);
+        
+        if (typeof updateAuthUI === 'function') updateAuthUI();
+        
+        // Показываем страницу только после определения пользователя
+        if (typeof showPage === 'function') {
+             // Если страница еще не отрисована, рисуем текущую
+             const container = document.getElementById('main-content');
+             if (container && container.innerHTML.includes('Загрузка...')) {
+                 showPage(currentPage, currentPageParams);
+             }
+        }
     });
 
-    // ==============================================
-    // ВОССТАНОВЛЕНИЕ СТРАНИЦЫ + СИДИНГ
-    // ==============================================
+    // 4. Восстановление последней страницы и запуск
     const savedPage = localStorage.getItem('lastPage');
     const savedParams = localStorage.getItem('lastPageParams');
     
@@ -2337,40 +2342,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentPageParams = {};
     }
 
-    await seedDataIfEmpty();
-    showPage(currentPage, currentPageParams);
+    // Заполнение данных (если нужно)
+    if (typeof seedDataIfEmpty === 'function') {
+        await seedDataIfEmpty();
+    }
+    
+    // Первичная отрисовка
+    if (typeof showPage === 'function') {
+        showPage(currentPage, currentPageParams);
+    }
 
     // ==============================================
-    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // ОБРАБОТЧИКИ СОБЫТИЙ (ВАШ КОД)
     // ==============================================
     
     // Профиль / выход
     document.getElementById('profile-modal-btn')?.addEventListener('click', async () => {
         if (currentUser) showPage('profile');
-        else { await loadLoginDropdowns(); openModal('auth-modal'); }
-    });
-
-    document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        try {
-            await auth.signOut();
-            currentUser = null;
-            localStorage.removeItem('beautyUser');
-            updateAuthUI();
-            showPage('home');
-        } catch(e) {
-            showNotification('Ошибка выхода', true);
+        else { 
+            if (typeof loadLoginDropdowns === 'function') await loadLoginDropdowns(); 
+            openModal('auth-modal'); 
         }
     });
-
-    // Модалки
+    
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        try { 
+            await auth.signOut(); 
+            currentUser = null; 
+            localStorage.removeItem('beautyUser'); 
+            if (typeof updateAuthUI === 'function') updateAuthUI(); 
+            showPage('home'); 
+        } catch(e) { 
+            showNotification('Ошибка выхода', true); 
+        }
+    });
+    
+    // Закрытие модалок
     document.querySelectorAll('.modal-close').forEach(btn => {
         btn.onclick = () => btn.closest('.modal').classList.remove('active');
     });
-
-    window.onclick = (e) => {
-        if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+    window.onclick = (e) => { 
+        if (e.target.classList.contains('modal')) e.target.classList.remove('active'); 
     };
-
+    
     // Регистрация
     document.getElementById('register-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2379,16 +2393,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const email = document.getElementById('reg-email').value.trim();
         const pass = document.getElementById('reg-pass').value;
         const phone = document.getElementById('reg-phone').value.trim();
-
-        if (!name || !email || !pass) {
-            showNotification('Заполните имя, email и пароль', true);
-            return;
+        
+        if (!name || !email || !pass) { 
+            showNotification('Заполните имя, email и пароль', true); 
+            return; 
         }
-        if (pass.length < 6) {
-            showNotification('Пароль должен быть не менее 6 символов', true);
-            return;
+        if (pass.length < 6) { 
+            showNotification('Пароль должен быть не менее 6 символов', true); 
+            return; 
         }
-
         try {
             const userCred = await auth.createUserWithEmailAndPassword(email, pass);
             const uid = userCred.user.uid;
@@ -2399,13 +2412,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             showNotification('Регистрация успешна!');
             closeModal('auth-modal');
         } catch(err) {
-            if (err.code === 'auth/email-already-in-use')
+            if (err.code === 'auth/email-already-in-use') 
                 showNotification('Пользователь с таким email уже существует', true);
-            else
+            else 
                 showNotification('Ошибка: ' + err.message, true);
         }
     });
-
+    
     // Логин
     document.getElementById('login-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2415,40 +2428,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             await auth.signInWithEmailAndPassword(email, password);
             closeModal('auth-modal');
         } catch(err) {
-            document.getElementById('login-error').style.display = 'block';
-            document.getElementById('login-error').innerText = 'Неверный email или пароль';
+            const errDiv = document.getElementById('login-error');
+            if (errDiv) {
+                errDiv.style.display = 'block';
+                errDiv.innerText = 'Неверный email или пароль';
+            }
         }
     });
-
+    
     // Переключение табов входа
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             const target = tab.dataset.tab;
-            // Обратите внимание: ID форм должны совпадать с HTML
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            if(loginForm) loginForm.classList.toggle('active', target === 'login');
-            if(registerForm) registerForm.classList.toggle('active', target === 'register');
+            document.getElementById('login-form').classList.toggle('active', target === 'login');
+            document.getElementById('register-form').classList.toggle('active', target === 'register');
         });
     });
-
+    
     document.getElementById('switch-to-register')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.auth-tab[data-tab="register"]').click();
     });
-
+    
     document.getElementById('switch-to-login')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.auth-tab[data-tab="login"]').click();
     });
-
+    
     // Гамбургер-меню
     document.getElementById('menuToggle')?.addEventListener('click', () => {
         document.querySelector('nav').classList.toggle('open');
     });
-
+    
     document.addEventListener('click', (e) => {
         const nav = document.querySelector('nav');
         const toggle = document.getElementById('menuToggle');
@@ -2456,35 +2469,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             nav.classList.remove('open');
         }
     });
-
+    
     // Сохранение страницы перед выгрузкой
     window.addEventListener('beforeunload', () => {
         localStorage.setItem('lastPage', currentPage);
         localStorage.setItem('lastPageParams', JSON.stringify(currentPageParams));
     });
-
+    
     // Фильтры админки
-    document.getElementById('applyBookingFilters')?.addEventListener('click', () => loadAllBookingsTable());
+    document.getElementById('applyBookingFilters')?.addEventListener('click', () => {
+        if (typeof loadAllBookingsTable === 'function') loadAllBookingsTable();
+    });
     document.getElementById('resetBookingFilters')?.addEventListener('click', () => {
         document.getElementById('bookingSearch').value = '';
         document.getElementById('statusFilter').value = 'all';
         document.getElementById('dateFilter').value = '';
-        loadAllBookingsTable();
+        if (typeof loadAllBookingsTable === 'function') loadAllBookingsTable();
     });
-
-    document.getElementById('applyReviewFilters')?.addEventListener('click', () => loadAllReviewsTable());
+    document.getElementById('applyReviewFilters')?.addEventListener('click', () => {
+        if (typeof loadAllReviewsTable === 'function') loadAllReviewsTable();
+    });
     document.getElementById('resetReviewFilters')?.addEventListener('click', () => {
         document.getElementById('reviewSearch').value = '';
         document.getElementById('reviewRatingFilter').value = 'all';
-        loadAllReviewsTable();
-    });
-
-    // Сохранение пользователя в админке
-    document.getElementById('edit-user-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveUser();
+        if (typeof loadAllReviewsTable === 'function') loadAllReviewsTable();
     });
     
+    // Сохранение пользователя в админке
+    document.getElementById('edit-user-form')?.addEventListener('submit', (e) => { 
+        e.preventDefault(); 
+        if (typeof saveUser === 'function') saveUser(); 
+    });
     document.getElementById('cancel-edit-user')?.addEventListener('click', () => closeModal('edit-user-modal'));
 
-}); // 
+});
