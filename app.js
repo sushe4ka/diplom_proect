@@ -2265,6 +2265,7 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 🔥 FIREBASE INIT (внутри DOMContentLoaded)
     const firebaseConfig = {
         apiKey: "AIzaSyC_HPtUiLt4ZyMpfgnUZf7yMbya7ePGlgg",
         authDomain: "diplom21.firebaseapp.com",
@@ -2275,15 +2276,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         measurementId: "G-KVMR59WDVC"
     };
     
+    // Инициализируем только если еще не инициализировано
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    // Восстановление последней страницы
+    // Присваиваем глобальным переменным
+    db = firebase.firestore();
+    auth = firebase.auth();
+
+    // Восстановление состояния аутентификации
+    auth.onAuthStateChanged(async (user) => {
+        if (isSeeding) return;
+        if (user) {
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    ...(doc.data() || { role: 'client' })
+                };
+                localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+            } catch(e) {
+                currentUser = { uid: user.uid, email: user.email, role: 'client' };
+            }
+        } else {
+            currentUser = null;
+            localStorage.removeItem('beautyUser');
+        }
+        updateAuthUI();
+        if (currentPage) showPage(currentPage, currentPageParams);
+    });
+
+    // ==============================================
+    // ВОССТАНОВЛЕНИЕ СТРАНИЦЫ + СИДИНГ
+    // ==============================================
     const savedPage = localStorage.getItem('lastPage');
     const savedParams = localStorage.getItem('lastPageParams');
+    
     if (savedPage && savedPage !== 'undefined') {
         currentPage = savedPage;
         currentPageParams = savedParams ? JSON.parse(savedParams) : {};
@@ -2291,22 +2321,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentPage = 'home';
         currentPageParams = {};
     }
+
     await seedDataIfEmpty();
     showPage(currentPage, currentPageParams);
 
-    // Обработчики модалок, кнопок
+    // ==============================================
+    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // ==============================================
+    
+    // Профиль / выход
     document.getElementById('profile-modal-btn')?.addEventListener('click', async () => {
         if (currentUser) showPage('profile');
         else { await loadLoginDropdowns(); openModal('auth-modal'); }
     });
+
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        try { await auth.signOut(); currentUser = null; localStorage.removeItem('beautyUser'); updateAuthUI(); showPage('home'); }
-        catch(e) { showNotification('Ошибка выхода', true); }
+        try {
+            await auth.signOut();
+            currentUser = null;
+            localStorage.removeItem('beautyUser');
+            updateAuthUI();
+            showPage('home');
+        } catch(e) {
+            showNotification('Ошибка выхода', true);
+        }
     });
+
+    // Модалки
     document.querySelectorAll('.modal-close').forEach(btn => {
         btn.onclick = () => btn.closest('.modal').classList.remove('active');
     });
-    window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
+
+    window.onclick = (e) => {
+        if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+    };
 
     // Регистрация
     document.getElementById('register-form')?.addEventListener('submit', async (e) => {
@@ -2316,8 +2364,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const email = document.getElementById('reg-email').value.trim();
         const pass = document.getElementById('reg-pass').value;
         const phone = document.getElementById('reg-phone').value.trim();
-        if (!name || !email || !pass) { showNotification('Заполните имя, email и пароль', true); return; }
-        if (pass.length < 6) { showNotification('Пароль должен быть не менее 6 символов', true); return; }
+
+        if (!name || !email || !pass) {
+            showNotification('Заполните имя, email и пароль', true);
+            return;
+        }
+        if (pass.length < 6) {
+            showNotification('Пароль должен быть не менее 6 символов', true);
+            return;
+        }
+
         try {
             const userCred = await auth.createUserWithEmailAndPassword(email, pass);
             const uid = userCred.user.uid;
@@ -2328,8 +2384,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             showNotification('Регистрация успешна!');
             closeModal('auth-modal');
         } catch(err) {
-            if (err.code === 'auth/email-already-in-use') showNotification('Пользователь с таким email уже существует', true);
-            else showNotification('Ошибка: ' + err.message, true);
+            if (err.code === 'auth/email-already-in-use')
+                showNotification('Пользователь с таким email уже существует', true);
+            else
+                showNotification('Ошибка: ' + err.message, true);
         }
     });
 
@@ -2347,20 +2405,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Переключение табов в модалке входа
+    // Переключение табов входа
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             const target = tab.dataset.tab;
-            document.getElementById('login-form').classList.toggle('active', target === 'login');
-            document.getElementById('register-form').classList.toggle('active', target === 'register');
+            // Обратите внимание: ID форм должны совпадать с HTML
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            if(loginForm) loginForm.classList.toggle('active', target === 'login');
+            if(registerForm) registerForm.classList.toggle('active', target === 'register');
         });
     });
+
     document.getElementById('switch-to-register')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.auth-tab[data-tab="register"]').click();
     });
+
     document.getElementById('switch-to-login')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.auth-tab[data-tab="login"]').click();
@@ -2370,6 +2433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('menuToggle')?.addEventListener('click', () => {
         document.querySelector('nav').classList.toggle('open');
     });
+
     document.addEventListener('click', (e) => {
         const nav = document.querySelector('nav');
         const toggle = document.getElementById('menuToggle');
@@ -2384,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('lastPageParams', JSON.stringify(currentPageParams));
     });
 
-    // Обработчики для фильтров в админке
+    // Фильтры админки
     document.getElementById('applyBookingFilters')?.addEventListener('click', () => loadAllBookingsTable());
     document.getElementById('resetBookingFilters')?.addEventListener('click', () => {
         document.getElementById('bookingSearch').value = '';
@@ -2392,6 +2456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dateFilter').value = '';
         loadAllBookingsTable();
     });
+
     document.getElementById('applyReviewFilters')?.addEventListener('click', () => loadAllReviewsTable());
     document.getElementById('resetReviewFilters')?.addEventListener('click', () => {
         document.getElementById('reviewSearch').value = '';
@@ -2400,23 +2465,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Сохранение пользователя в админке
-    document.getElementById('edit-user-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveUser(); });
+    document.getElementById('edit-user-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveUser();
+    });
+    
     document.getElementById('cancel-edit-user')?.addEventListener('click', () => closeModal('edit-user-modal'));
 
-    auth.onAuthStateChanged(async (user) => {
-    if (isSeeding) return;
-    if (user) {
-        try {
-            const doc = await db.collection('users').doc(user.uid).get();
-            currentUser = { uid: user.uid, email: user.email, ...(doc.data() || { role: 'client' }) };
-            localStorage.setItem('beautyUser', JSON.stringify(currentUser));
-        } catch(e) { currentUser = { uid: user.uid, email: user.email, role: 'client' }; }
-    } else {
-        currentUser = null;
-        localStorage.removeItem('beautyUser');
-    }
-    updateAuthUI();
-    if (currentPage) showPage(currentPage, currentPageParams);
-});
-
-});
+}); // 
