@@ -1,18 +1,18 @@
 // ==============================================
 // FIREBASE INIT (v8 Compat)
 // ==============================================
-const firebaseConfig = {
-    apiKey: "AIzaSyC_HPtUiLt4ZyMpfgnUZf7yMbya7ePGlgg",
-    authDomain: "diplom21.firebaseapp.com",
-    projectId: "diplom21",
-    storageBucket: "diplom21.firebasestorage.app",
-    messagingSenderId: "689518163318",
-    appId: "1:689518163318:web:1763693cb1399e2304f657",
-    measurementId: "G-KVMR59WDVC"
-};
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+// const firebaseConfig = {
+//     apiKey: "AIzaSyC_HPtUiLt4ZyMpfgnUZf7yMbya7ePGlgg",
+//     authDomain: "diplom21.firebaseapp.com",
+//     projectId: "diplom21",
+//     storageBucket: "diplom21.firebasestorage.app",
+//     messagingSenderId: "689518163318",
+//     appId: "1:689518163318:web:1763693cb1399e2304f657",
+//     measurementId: "G-KVMR59WDVC"
+// };
+// if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+// const db = firebase.firestore();
+// const auth = firebase.auth();
 
 // Включение офлайн-персистенса (кеширование данных)
 db.enablePersistence()
