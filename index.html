@@ -140,7 +140,7 @@
     </div>
 </div>
 
-<!-- Service Modal -->
+<!-- Service Modal (с полем для фото) -->
 <div id="service-modal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeModal('service-modal')">&times;</span>
@@ -161,6 +161,7 @@
                 <div class="form-group"><label>Цена (₽)</label><input type="number" id="serv-price" class="form-input" required min="0"></div>
             </div>
             <div class="form-group"><label>Салон</label><select id="serv-salon" class="form-input" required></select></div>
+            <div class="form-group"><label>Фото URL</label><input type="url" id="serv-image" class="form-input" placeholder="https://..."></div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('service-modal')">Отмена</button>
                 <button type="button" class="btn btn-primary" id="save-serv">Сохранить</button>

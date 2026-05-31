@@ -74,12 +74,10 @@ function getCategoryName(cat) {
 }
 
 function getSafeImageUrl(type, name) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-        <rect width="400" height="300" fill="#f0f2f5"/>
-        <text x="200" y="150" font-family="Arial" font-size="20" fill="#808080" text-anchor="middle">Изображение</text>
-        <text x="200" y="180" font-family="Arial" font-size="14" fill="#90a0b0" text-anchor="middle">${type}</text>
-    </svg>`;
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    if (type === 'salon') return `https://source.unsplash.com/featured/?salon,beauty&${Math.random()}`;
+    if (type === 'service') return `https://source.unsplash.com/featured/?${name?.toLowerCase().replace(/ /g,',')},beauty&${Math.random()}`;
+    if (type === 'master') return `https://randomuser.me/api/portraits/women/${Math.floor(Math.random()*100)}.jpg`;
+    return 'https://via.placeholder.com/400x300?text=Изображение';
 }
 
 async function getCached(collection, forceRefresh = false) {
@@ -213,6 +211,10 @@ async function handleLogin(event) {
         showNotification(`Добро пожаловать, ${currentUser.name || currentUser.email}!`);
         updateAuthUI();
         if (currentPage) showPage(currentPage);
+        if (prefillData.redirectBooking) {
+            startBooking(prefillData);
+            prefillData = {};
+        }
     } catch (error) {
         let errorMessage = 'Ошибка входа';
         switch (error.code) {
@@ -271,6 +273,10 @@ async function handleRegister(event) {
         showNotification('Регистрация успешно завершена!');
         updateAuthUI();
         if (currentPage) showPage(currentPage);
+        if (prefillData.redirectBooking) {
+            startBooking(prefillData);
+            prefillData = {};
+        }
     } catch (error) {
         let errorMessage = 'Ошибка регистрации';
         switch (error.code) {
@@ -456,7 +462,7 @@ async function getMasterNameById(masterId) {
 }
 
 // ==============================================
-// HOME PAGE (полная, с услугами и мастерами)
+// HOME PAGE
 // ==============================================
 async function renderHome() {
     const container = document.querySelector('#main-content .container');
@@ -555,7 +561,7 @@ function renderSalonCards(salons, containerId) {
     <div class="card" data-id="${s.id}"><img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3 class="card-title">${escapeHtml(s.name)}</h3><p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(s.address||'')}</p><div class="rating">${renderStars(s.rating)}</div><div class="card-actions"><button class="btn btn-outline btn-detail" data-id="${s.id}">Подробнее</button><button class="btn btn-primary btn-book" data-id="${s.id}">Записаться</button></div></div></div>
     `).join('');
     container.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('salon', { id: btn.dataset.id }));
-    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => startBooking({ salonId: btn.dataset.id }));
+    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ salonId: btn.dataset.id }));
     container.querySelectorAll('.card').forEach(card => card.onclick = (e) => { if(!e.target.closest('button')) showPage('salon', { id: card.dataset.id }); });
 }
 
@@ -577,7 +583,7 @@ function renderServiceCards(services, containerId) {
     </div>
     `).join('');
     container.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { name: decodeURIComponent(btn.dataset.name) }));
-    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => startBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
+    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
 }
 
 function renderMasterCards(masters, containerId) {
@@ -599,11 +605,20 @@ function renderMasterCards(masters, containerId) {
     </div>
     `).join('');
     container.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('master', { id: btn.dataset.id }));
-    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => startBooking({ masterId: btn.dataset.id }));
+    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ masterId: btn.dataset.id }));
+}
+
+function checkAuthAndStartBooking(prefill) {
+    if (!currentUser) {
+        prefillData = { ...prefill, redirectBooking: true };
+        openModal('auth-modal');
+        return;
+    }
+    startBooking(prefill);
 }
 
 // ==============================================
-// LISTS & DETAILS (полные)
+// LISTS & DETAILS
 // ==============================================
 async function renderSalons(params = {}) {
     const container = document.querySelector('#main-content .container');
@@ -659,7 +674,7 @@ async function renderServices() {
     <div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3>${escapeHtml(s.name)}</h3><p>${s.price} ₽ • ${getCategoryName(s.category)}</p><div class="card-actions"><button class="btn btn-outline btn-detail" data-name="${encodeURIComponent(s.name)}">Подробнее</button><button class="btn btn-primary btn-book" data-name="${encodeURIComponent(s.name)}">Записаться</button></div></div></div>
     `).join('');
     list.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { name: decodeURIComponent(btn.dataset.name) }));
-    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => startBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
+    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
 }
 
 async function renderMasters() {
@@ -683,7 +698,7 @@ async function renderMasters() {
     <div class="card" data-id="${m.id}"><img src="${m.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3>${escapeHtml(m.name)}</h3><p><i class="fas fa-user-tie"></i> ${escapeHtml(m.specialization||'Мастер')}</p><p><i class="fas fa-store"></i> ${escapeHtml(m.salonName||salonMap[m.salonId]||'Не указан')}</p><div class="rating">${renderStars(m.rating)}</div><div class="card-actions"><button class="btn btn-outline btn-detail" data-id="${m.id}">Подробнее</button><button class="btn btn-primary btn-book" data-id="${m.id}">Записаться</button></div></div></div>
     `).join('');
     list.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('master', { id: btn.dataset.id }));
-    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => startBooking({ masterId: btn.dataset.id }));
+    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ masterId: btn.dataset.id }));
 }
 
 async function renderSalonDetail(id) {
@@ -711,7 +726,7 @@ async function renderSalonDetail(id) {
             <div id="reviewsList"></div>
         </div>
         `;
-        document.getElementById('bookSalonBtn').onclick = () => startBooking({ salonId: id });
+        document.getElementById('bookSalonBtn').onclick = () => checkAuthAndStartBooking({ salonId: id });
         const svcDiv = document.getElementById('salonServices');
         const svcFallback = getSafeImageUrl('service','fallback');
         if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽ • ${getCategoryName(s.category)}</p></div></div>`).join('');
@@ -719,7 +734,7 @@ async function renderSalonDetail(id) {
         const mstDiv = document.getElementById('salonMasters');
         const mstFallback = getSafeImageUrl('master','fallback');
         if (mstDiv) mstDiv.innerHTML = masters.map(m => `<div class="card" data-id="${m.id}"><img src="${m.imageUrl||mstFallback}" class="card-img" onerror="this.src='${mstFallback}'"><div class="card-content"><h3>${escapeHtml(m.name)||'Без имени'}</h3><p>${escapeHtml(m.specialization)||''}</p><div class="rating">${renderStars(m.rating)}</div></div></div>`).join('');
-        mstDiv.querySelectorAll('.card').forEach(c => c.onclick = () => startBooking({ masterId: c.dataset.id, salonId: id }));
+        mstDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: c.dataset.id, salonId: id }));
         const reviewsListDiv = document.getElementById('reviewsList');
         function renderReviewList() {
             reviewsListDiv.innerHTML = reviews.length ? reviews.map(r => `<div class="card"><div class="card-content"><div class="rating">${renderStars(r.rating)}</div><p>"${r.text}"</p><p><strong>${r.authorName}</strong> &mdash; ${new Date(r.createdAt?.seconds*1000).toLocaleDateString('ru-RU')}</p></div></div>`).join('') : '<p>Пока нет отзывов.</p>';
@@ -734,6 +749,7 @@ async function renderSalonDetail(id) {
         document.getElementById('reviewStars')?.addEventListener('mouseleave', () => updateStars(selectedReviewRating));
         function updateStars(val) { starElements.forEach(s => { s.className = parseInt(s.dataset.value) <= val ? 'fas fa-star' : 'far fa-star'; }); }
         document.getElementById('submitReviewBtn')?.addEventListener('click', async () => {
+            if (!currentUser) { showNotification('Войдите, чтобы оставить отзыв', true); openModal('auth-modal'); return; }
             const text = document.getElementById('reviewText').value.trim();
             if (!selectedReviewRating) { showNotification('Выберите оценку', true); return; }
             if (!text) { showNotification('Напишите отзыв', true); return; }
@@ -771,10 +787,10 @@ async function renderMasterDetail(id) {
         <div class="detail-header"><div class="detail-img"><img src="${master.imageUrl||fallbackImg}" onerror="this.src='${fallbackImg}'"></div><div class="detail-info"><h1 class="detail-title">${escapeHtml(master.name)}</h1><div class="detail-meta"><span><i class="fas fa-store"></i> ${escapeHtml(salon.name)}</span><span><i class="fas fa-briefcase"></i> ${escapeHtml(master.specialization||'')}</span><span><i class="fas fa-star"></i> ${(parseFloat(master.rating)||0).toFixed(1)}</span></div><button class="btn btn-primary" id="bookMasterBtn"><i class="fas fa-calendar-check"></i> Записаться</button></div></div>
         <h2 class="section-title">Услуги мастера</h2><div id="masterServices" class="services-grid"></div>
         `;
-        document.getElementById('bookMasterBtn').onclick = () => startBooking({ masterId: id });
+        document.getElementById('bookMasterBtn').onclick = () => checkAuthAndStartBooking({ masterId: id });
         const svcDiv = document.getElementById('masterServices');
         if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽</p></div></div>`).join('');
-        svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => startBooking({ masterId: id, serviceName: decodeURIComponent(c.dataset.name) }));
+        svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: id, serviceName: decodeURIComponent(c.dataset.name) }));
     } catch(e) { console.error(e); }
 }
 
@@ -793,18 +809,23 @@ async function renderServiceDetail(name) {
         <div class="detail-header"><div class="detail-img"><img src="${service.imageUrl||fallbackImg}" onerror="this.src='${fallbackImg}'"></div><div class="detail-info"><h1 class="detail-title">${escapeHtml(service.name)}</h1><div class="detail-meta"><span><i class="fas fa-tag"></i> ${getCategoryName(service.category)}</span><span><i class="fas fa-ruble-sign"></i> ${service.price} ₽</span></div><button class="btn btn-primary" id="bookServiceBtn"><i class="fas fa-calendar-check"></i> Записаться</button></div></div>
         <h2 class="section-title">Салоны, предоставляющие услугу</h2><div id="serviceSalons" class="salons-grid"></div>
         `;
-        document.getElementById('bookServiceBtn').onclick = () => startBooking({ serviceName: decoded });
+        document.getElementById('bookServiceBtn').onclick = () => checkAuthAndStartBooking({ serviceName: decoded });
         renderSalonCards(salons, 'serviceSalons');
     } catch(e) { console.error(e); }
 }
 
 // ==============================================
-// BOOKING (исправлена: уменьшенные карточки, авто заполнение, подсветка, правильный запрос)
+// BOOKING
 // ==============================================
 let bookingServicesCache = [];
 let bookingMastersCache = [];
 
 async function startBooking(prefill = {}) {
+    if (!currentUser) {
+        prefillData = { ...prefill, redirectBooking: true };
+        openModal('auth-modal');
+        return;
+    }
     prefillData = prefill;
     selectedService = selectedMaster = selectedDate = selectedTime = null;
     await renderBooking();
@@ -1032,6 +1053,11 @@ async function checkPointsAvailability() {
 }
 
 async function confirmBooking() {
+    if (!currentUser) {
+        showNotification('Необходимо войти в систему', true);
+        openModal('auth-modal');
+        return;
+    }
     if (!selectedService || !selectedMaster || !selectedDate || !selectedTime) return;
     const name = document.getElementById('clientName').value;
     const phoneRaw = document.getElementById('clientPhone').value.trim();
@@ -1081,7 +1107,6 @@ async function confirmBooking() {
     }
     
     try {
-        // Исправленный запрос: только masterId и date (индекс не требуется)
         const existingBookingsSnap = await db.collection('bookings')
             .where('masterId', '==', finalMasterId)
             .where('date', '==', selectedDate)
@@ -1098,7 +1123,7 @@ async function confirmBooking() {
         }
         
         await db.collection('bookings').add({
-            userId: currentUser?.uid || 'guest',
+            userId: currentUser.uid,
             salonId: finalSalonId,
             salonName: finalSalonName,
             serviceId: selectedService.id,
@@ -1315,7 +1340,7 @@ async function renderMasterCabinet() {
                 </select>
             </td>
         </tr>
-    `).join('') : '<tr><td colspan="7">Нет записей</td></tr>';
+    `).join('') : '<tr><td colspan="7">Нет записей</td>';
 
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.onclick = () => {
@@ -1405,7 +1430,7 @@ async function renderMasterSchedule() {
         const adjustedFirstDay = firstDay === 0 ? 7 : firstDay;
 
         let calendarHTML = `<h2>${monthNames[currentMonth]} ${currentYear}</h2>`;
-        calendarHTML += '<table class="calendar-table"><thead><tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr></thead><tbody><tr>';
+        calendarHTML += '<table class="calendar-table"><thead><tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th><tr></thead><tbody><tr>';
 
         for (let i = 1; i < adjustedFirstDay; i++) {
             calendarHTML += '<td></td>';
@@ -1424,10 +1449,10 @@ async function renderMasterSchedule() {
             calendarHTML += `<td class="${classes}" data-date="${date}">${day}</td>`;
 
             if ((day + adjustedFirstDay - 1) % 7 === 0) {
-                calendarHTML += '</tr><tr>';
+                calendarHTML += '</tr>';
             }
         }
-        calendarHTML += '</tr></tbody></table>';
+        calendarHTML += '</tbody></table>';
         return calendarHTML;
     }
 
@@ -1511,7 +1536,7 @@ async function renderMasterSchedule() {
 }
 
 // ==============================================
-// ADMIN PANEL (полная, исправленная)
+// ADMIN PANEL
 // ==============================================
 async function renderAdmin() {
     if (!currentUser || currentUser.role !== 'admin') return showPage('home');
@@ -1598,7 +1623,7 @@ async function renderAdmin() {
         </div>
         <div style="max-height:500px; overflow-y:auto;">
             <table class="history-table">
-                <thead><tr><th>Салон</th><th>Автор</th><th>Рейтинг</th><th>Текст отзыва</th><th>Дата</th><th>Действия</th></tr></thead>
+                <thead><tr><th>Салон</th><th>Автор</th><th>Рейтинг</th><th>Текст отзыва</th><th>Дата</th><th>Действия</th><tr></thead>
                 <tbody id="reviewsTableBody"></tbody>
             </table>
         </div>
@@ -1763,7 +1788,7 @@ async function refreshAdminData() {
 }
 
 // ==============================================
-// CRUD MODALS HELPERS (полные)
+// CRUD MODALS HELPERS
 // ==============================================
 function resetMasterForm() {
     document.getElementById('mast-name').value = '';
@@ -1782,7 +1807,9 @@ function openServiceModal(serviceId = null) {
     if (select) select.innerHTML = salons.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     document.getElementById('service-form').reset();
     document.getElementById('serv-id').value = '';
+    document.getElementById('serv-image').value = '';
     document.getElementById('service-modal-title').textContent = 'Добавить услугу';
+    
     if (serviceId) {
         const service = cache.services.find(s => s.id === serviceId);
         if (service) {
@@ -1791,10 +1818,12 @@ function openServiceModal(serviceId = null) {
             document.getElementById('serv-cat').value = service.category || 'hair';
             document.getElementById('serv-price').value = service.price || 0;
             document.getElementById('serv-salon').value = service.salonId || '';
+            document.getElementById('serv-image').value = service.imageUrl || '';
             document.getElementById('service-modal-title').textContent = 'Редактировать услугу';
         }
     }
     openModal('service-modal');
+    
     const saveBtn = document.getElementById('save-serv');
     saveBtn.onclick = async () => {
         const id = document.getElementById('serv-id').value;
@@ -1803,7 +1832,17 @@ function openServiceModal(serviceId = null) {
         const salonId = document.getElementById('serv-salon').value;
         if (!name || !price || !salonId) { showNotification('Заполните все поля', true); return; }
         const salonName = cache.salons.find(s => s.id === salonId)?.name || '';
-        const newData = { name, category: document.getElementById('serv-cat').value, price, salonId, salonName, duration: 60, imageUrl: getSafeImageUrl('service', name) };
+        let imageUrl = document.getElementById('serv-image').value.trim();
+        if (!imageUrl) imageUrl = getSafeImageUrl('service', name);
+        const newData = { 
+            name, 
+            category: document.getElementById('serv-cat').value, 
+            price, 
+            salonId, 
+            salonName, 
+            duration: 60, 
+            imageUrl 
+        };
         try {
             if (id) {
                 const old = (await db.collection('services').doc(id).get()).data();
@@ -2305,103 +2344,167 @@ async function seedDataIfEmpty(force = false) {
     }
     isSeeding = true;
     try {
-        const salonNames = [
-            "Beauty Studio 'Элегант'", "Spa 'Оазис'", "Barbershop 'Брутал'", "Салон 'Шарм'",
-            "Лаборатория красоты", "Студия 'Имидж'", "Центр 'Гармония'", "Beauty House",
-            "Solo Nails", "Парикмахерская 'Локон'", "Косметология 'Лик'", "Массажный салон 'Релакс'",
-            "Барбершоп 'Классик'", "Салон 'Визаж'", "Студия загара 'Золото'"
-        ];
-        const addresses = [
-            "ул. Ленина, 45", "ул. Пушкина, 12", "ул. Советская, 23", "пр. Мира, 8",
-            "ул. Гагарина, 15", "ул. Кирова, 7", "ул. Октябрьская, 30", "ул. Комсомольская, 55",
-            "ул. Дзержинского, 19", "ул. Лермонтова, 3", "ул. Чехова, 11", "ул. Толстого, 24",
-            "ул. Достоевского, 41", "ул. Тургенева, 6", "ул. Есенина, 17"
+        // Салоны
+        const salonsData = [
+            { name: "Beauty Studio 'Элегант'", address: "ул. Ленина, 45", imageUrl: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400&h=300&fit=crop", specializations: ["hair","nails"] },
+            { name: "Spa 'Оазис'", address: "ул. Пушкина, 12", imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=300&fit=crop", specializations: ["massage","cosmetology"] },
+            { name: "Barbershop 'Брутал'", address: "ул. Советская, 23", imageUrl: "https://images.unsplash.com/photo-1503951914875-3c4044a4c7a8?w=400&h=300&fit=crop", specializations: ["barber","hair"] },
+            { name: "Салон 'Шарм'", address: "пр. Мира, 8", imageUrl: "https://images.unsplash.com/photo-1560066984-1385b3ba8e38?w=400&h=300&fit=crop", specializations: ["nails","makeup"] },
+            { name: "Лаборатория красоты", address: "ул. Гагарина, 15", imageUrl: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=400&h=300&fit=crop", specializations: ["cosmetology","hair"] }
         ];
         const salonRefs = [];
-        for (let i = 0; i < 15; i++) {
+        for (const s of salonsData) {
             const ref = await db.collection('salons').add({
-                name: salonNames[i],
-                address: addresses[i],
-                specializations: ['hair', 'nails'],
-                imageUrl: getSafeImageUrl('salon', salonNames[i]),
-                rating: 4 + Math.random() * 0.9,
+                name: s.name,
+                address: s.address,
+                imageUrl: s.imageUrl,
+                specializations: s.specializations,
+                rating: 4.2 + Math.random() * 0.8,
                 reviewCount: 0
             });
-            salonRefs.push({ id: ref.id, name: salonNames[i] });
+            salonRefs.push({ id: ref.id, name: s.name });
         }
-        const serviceNames = ['Стрижка', 'Окрашивание', 'Маникюр', 'Педикюр', 'Чистка лица', 'Массаж', 'Бритьё', 'Укладка'];
-        for (let i = 0; i < 20; i++) {
-            const salon = salonRefs[Math.floor(Math.random() * salonRefs.length)];
-            await db.collection('services').add({
-                name: serviceNames[Math.floor(Math.random() * serviceNames.length)],
-                price: 1000 + Math.random() * 4000,
-                category: ['hair', 'nails', 'cosmetology', 'massage', 'barber'][Math.floor(Math.random() * 5)],
-                salonId: salon.id,
-                salonName: salon.name,
-                duration: 60,
-                imageUrl: getSafeImageUrl('service', 'service')
-            });
-        }
-        const usersToCreate = [
-            { email: 'admin@beauty.ru', name: 'Админ', role: 'admin', password: 'admin123' },
-            { email: 'client@beauty.ru', name: 'Клиент', role: 'client', password: 'client123' }
+        // Услуги
+        const servicesList = [
+            { name: "Стрижка", price: 1500, category: "hair", duration: 60 },
+            { name: "Окрашивание", price: 3500, category: "hair", duration: 120 },
+            { name: "Маникюр", price: 1200, category: "nails", duration: 60 },
+            { name: "Педикюр", price: 1800, category: "nails", duration: 90 },
+            { name: "Чистка лица", price: 2500, category: "cosmetology", duration: 60 },
+            { name: "Массаж спины", price: 2000, category: "massage", duration: 60 },
+            { name: "Бритьё", price: 800, category: "barber", duration: 30 },
+            { name: "Укладка", price: 1200, category: "hair", duration: 45 },
+            { name: "Наращивание ресниц", price: 2200, category: "cosmetology", duration: 90 },
+            { name: "Обёртывание", price: 2800, category: "massage", duration: 90 }
         ];
-        const masterNamesList = ['Анна Иванова', 'Елена Петрова', 'Дмитрий Сидоров', 'Мария Смирнова', 'Сергей Козлов'];
-        for (let i = 0; i < masterNamesList.length; i++) {
-            usersToCreate.push({
-                email: `master${i+1}@beauty.ru`,
-                name: masterNamesList[i].split(' ')[0],
-                lastname: masterNamesList[i].split(' ')[1] || '',
-                role: 'master',
-                password: 'Master123!'
-            });
+        const serviceDocs = [];
+        for (const salon of salonRefs) {
+            const numServices = 3 + Math.floor(Math.random() * 3);
+            const shuffled = [...servicesList].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < numServices; i++) {
+                const svc = { ...shuffled[i], salonId: salon.id, salonName: salon.name, imageUrl: `https://source.unsplash.com/featured/?${shuffled[i].name.replace(/ /g,',')},beauty&${Math.random()}` };
+                const ref = await db.collection('services').add(svc);
+                serviceDocs.push({ id: ref.id, ...svc });
+            }
         }
+        // Пользователи
+        const usersToCreate = [
+            { email: "admin@beauty.ru", password: "admin123", name: "Админ", role: "admin", points: 0 },
+            { email: "anna.master@beauty.ru", password: "Master123!", name: "Анна", lastname: "Иванова", role: "master", points: 0 },
+            { email: "elena.master@beauty.ru", password: "Master123!", name: "Елена", lastname: "Петрова", role: "master", points: 0 },
+            { email: "dmitry.master@beauty.ru", password: "Master123!", name: "Дмитрий", lastname: "Сидоров", role: "master", points: 0 },
+            { email: "maria.master@beauty.ru", password: "Master123!", name: "Мария", lastname: "Смирнова", role: "master", points: 0 },
+            { email: "client@beauty.ru", password: "client123", name: "Клиент", lastname: "Основной", role: "client", points: 100 },
+            { email: "olga@mail.ru", password: "client123", name: "Ольга", lastname: "Козлова", role: "client", points: 50 },
+            { email: "ivan@mail.ru", password: "client123", name: "Иван", lastname: "Новиков", role: "client", points: 20 }
+        ];
         const createdUsers = [];
-        for (const user of usersToCreate) {
+        for (const u of usersToCreate) {
+            let uid;
             try {
-                let existingUser = null;
-                try { existingUser = await auth.signInWithEmailAndPassword(user.email, user.password); } catch(e) {}
-                let uid;
-                if (!existingUser) {
-                    const cred = await auth.createUserWithEmailAndPassword(user.email, user.password);
-                    uid = cred.user.uid;
-                    await cred.user.updateProfile({ displayName: user.name });
+                const existing = await auth.signInWithEmailAndPassword(u.email, u.password).catch(() => null);
+                if (existing) {
+                    uid = existing.user.uid;
                 } else {
-                    uid = existingUser.user.uid;
+                    const cred = await auth.createUserWithEmailAndPassword(u.email, u.password);
+                    uid = cred.user.uid;
+                    await cred.user.updateProfile({ displayName: u.name });
                 }
                 const userData = {
                     uid: uid,
-                    email: user.email,
-                    name: user.name,
-                    lastname: user.lastname || '',
-                    role: user.role,
-                    points: user.role === 'client' ? 100 : 0,
+                    email: u.email,
+                    name: u.name,
+                    lastname: u.lastname || '',
+                    role: u.role,
+                    points: u.points,
                     registrationDate: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await db.collection('users').doc(uid).set(userData, { merge: true });
                 createdUsers.push({ uid, ...userData });
-            } catch (e) { console.error('Ошибка создания пользователя:', e); }
+            } catch(e) { console.error("Ошибка создания пользователя", u.email, e); }
         }
-        const mastersToCreate = createdUsers.filter(u => u.role === 'master');
-        for (let i = 0; i < mastersToCreate.length && i < masterNamesList.length; i++) {
-            const user = mastersToCreate[i];
-            const salon = salonRefs[i % salonRefs.length];
+        // Мастера
+        const mastersData = [
+            { name: "Анна Иванова", userId: createdUsers.find(u => u.email === "anna.master@beauty.ru")?.uid, salonId: salonRefs[0].id, specialization: "Парикмахер-стилист", imageUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
+            { name: "Елена Петрова", userId: createdUsers.find(u => u.email === "elena.master@beauty.ru")?.uid, salonId: salonRefs[1].id, specialization: "Массажист", imageUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
+            { name: "Дмитрий Сидоров", userId: createdUsers.find(u => u.email === "dmitry.master@beauty.ru")?.uid, salonId: salonRefs[2].id, specialization: "Барбер", imageUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
+            { name: "Мария Смирнова", userId: createdUsers.find(u => u.email === "maria.master@beauty.ru")?.uid, salonId: salonRefs[3].id, specialization: "Маникюрный мастер", imageUrl: "https://randomuser.me/api/portraits/women/90.jpg" },
+            { name: "Сергей Козлов", userId: null, salonId: salonRefs[4].id, specialization: "Косметолог", imageUrl: "https://randomuser.me/api/portraits/men/45.jpg" },
+            { name: "Татьяна Власова", userId: null, salonId: salonRefs[0].id, specialization: "Колорист", imageUrl: "https://randomuser.me/api/portraits/women/33.jpg" },
+            { name: "Алексей Морозов", userId: null, salonId: salonRefs[2].id, specialization: "Барбер", imageUrl: "https://randomuser.me/api/portraits/men/22.jpg" },
+            { name: "Ирина Соколова", userId: null, salonId: salonRefs[1].id, specialization: "Косметолог-эстетист", imageUrl: "https://randomuser.me/api/portraits/women/44.jpg" }
+        ];
+        for (const m of mastersData) {
+            let userId = m.userId;
+            if (!userId) {
+                const tempEmail = `master_${Date.now()}_${Math.random().toString(36).substr(2,6)}@temp.com`;
+                const cred = await auth.createUserWithEmailAndPassword(tempEmail, "Master123!");
+                userId = cred.user.uid;
+                await cred.user.updateProfile({ displayName: m.name });
+                await db.collection('users').doc(userId).set({
+                    uid: userId, email: tempEmail, name: m.name, role: "master", points: 0, registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            const salonServices = serviceDocs.filter(s => s.salonId === m.salonId);
+            const providedServices = salonServices.slice(0, 2 + Math.floor(Math.random() * 2)).map(s => s.id);
             await db.collection('masters').add({
-                name: `${user.name} ${user.lastname || ''}`.trim(),
+                name: m.name,
+                salonId: m.salonId,
+                salonName: salonRefs.find(s => s.id === m.salonId).name,
+                userId: userId,
+                specialization: m.specialization,
+                providedServices: providedServices,
+                imageUrl: m.imageUrl,
+                rating: 4.5 + Math.random() * 0.5,
+                daysOff: []
+            });
+        }
+        // Бронирования
+        const bookingsStatuses = ["Новая", "Подтверждена", "Выполнена", "Отменена"];
+        const dates = ["2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05"];
+        const clients = createdUsers.filter(u => u.role === "client");
+        for (let i = 0; i < 12; i++) {
+            const client = clients[i % clients.length];
+            const master = (await db.collection('masters').get()).docs[i % 8];
+            const service = serviceDocs[i % serviceDocs.length];
+            if (!master || !service) continue;
+            await db.collection('bookings').add({
+                userId: client.uid,
+                clientName: client.name,
+                clientPhone: "+79001234567",
+                salonId: service.salonId,
+                salonName: service.salonName,
+                serviceId: service.id,
+                serviceName: service.name,
+                masterId: master.id,
+                masterName: master.data().name,
+                date: dates[i % dates.length],
+                time: `${10 + (i % 10)}:00`,
+                totalPrice: service.price,
+                originalPrice: service.price,
+                pointsUsed: 0,
+                status: bookingsStatuses[i % bookingsStatuses.length],
+                bookingDate: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        // Отзывы
+        const reviewsText = ["Отличный сервис!", "Всё понравилось, приду ещё", "Немного долго, но результат отличный", "Профессионалы своего дела", "Не очень понравилось, но вежливо"];
+        for (let i = 0; i < 15; i++) {
+            const salon = salonRefs[i % salonRefs.length];
+            const client = clients[i % clients.length];
+            await db.collection('reviews').add({
                 salonId: salon.id,
                 salonName: salon.name,
-                userId: user.uid,
-                specialization: ['Парикмахер', 'Маникюрша', 'Косметолог', 'Массажист', 'Барбер'][i % 5],
-                providedServices: [],
-                rating: 4 + Math.random() * 0.9,
-                imageUrl: getSafeImageUrl('master', 'master'),
-                daysOff: [],
+                userId: client.uid,
+                authorName: client.name,
+                rating: 3 + Math.floor(Math.random() * 3),
+                text: reviewsText[i % reviewsText.length],
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         await clearCache();
         seedCompleted = true;
-        console.log("Seed завершён");
+        console.log("Seed завершён с реальными данными");
     } catch (error) { console.error('Ошибка автозаполнения:', error); }
     finally {
         isSeeding = false;
@@ -2468,6 +2571,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Глобальные функции
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.handleLogin = handleLogin;
