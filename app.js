@@ -31,6 +31,7 @@ let lastFetch = 0;
 let editingUserId = null;
 let seedCompleted = false;
 let isSeeding = false;
+<<<<<<< HEAD
 let searchTimeout = null;
 let pointsToEarn = 0;
 
@@ -128,9 +129,11 @@ async function autoUpdatePastBookings() {
         await refreshCache();
     }
 }
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 
 // ==============================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// HELPERS
 // ==============================================
 function showNotification(msg, isError = false) {
     const div = document.createElement('div');
@@ -171,6 +174,7 @@ function getCategoryName(cat) {
 }
 
 function getSafeImageUrl(type, name) {
+<<<<<<< HEAD
     const images = {
         salon: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a0b9?w=400&h=300&fit=crop',
         service: 'https://images.unsplash.com/photo-1596462502278-27e7979f5e7a?w=400&h=300&fit=crop',
@@ -178,6 +182,31 @@ function getSafeImageUrl(type, name) {
         hero: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&h=600&fit=crop'
     };
     return images[type] || images.salon;
+=======
+    if (type === 'salon') return `https://source.unsplash.com/featured/?salon,beauty&${Math.random()}`;
+    if (type === 'service') return `https://source.unsplash.com/featured/?${name?.toLowerCase().replace(/ /g,',')},beauty&${Math.random()}`;
+    if (type === 'master') return `https://randomuser.me/api/portraits/women/${Math.floor(Math.random()*100)}.jpg`;
+    return 'https://via.placeholder.com/400x300?text=Изображение';
+}
+
+async function getCached(collection, forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && cache[collection] && now - lastFetch < CACHE_TTL) return cache[collection];
+    try {
+        const snap = await db.collection(collection).get();
+        cache[collection] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        lastFetch = now;
+        return cache[collection];
+    } catch(e) {
+        console.error(`Load ${collection}:`, e);
+        return [];
+    }
+}
+
+async function clearCache() {
+    cache = { salons: [], services: [], masters: [], users: [], bookings: [], reviews: [], settings: [] };
+    lastFetch = 0;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 async function logAdminAction(actionType, collection, docId, oldData, newData) {
@@ -208,6 +237,7 @@ function escapeHtml(str) {
 }
 
 // ==============================================
+<<<<<<< HEAD
 // SEED FUNCTION (с нормальными фото)
 // ==============================================
 async function seedDataIfEmpty(force = false) {
@@ -374,6 +404,18 @@ function openModal(id) {
     } 
 }
 
+=======
+// MODAL FUNCTIONS
+// ==============================================
+function openModal(id) { 
+    const m = document.getElementById(id); 
+    if (m) {
+        m.classList.add('active'); 
+        document.body.style.overflow = 'hidden';
+    } 
+}
+
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 function closeModal(id) { 
     const m = document.getElementById(id); 
     if (m) {
@@ -390,17 +432,26 @@ document.addEventListener('click', function(e) {
 });
 
 // ==============================================
+<<<<<<< HEAD
 // AUTH FUNCTIONS (ИСПРАВЛЕНО ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК)
+=======
+// AUTH FUNCTIONS
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 function switchAuthTab(tab) {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
+<<<<<<< HEAD
     const tabs = document.querySelectorAll('#auth-modal .auth-tab');
+=======
+    const tabs = document.querySelectorAll('.auth-tab');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     
     if (tab === 'login') {
         loginForm.classList.add('active');
         registerForm.classList.remove('active');
         tabs.forEach(t => {
+<<<<<<< HEAD
             if (t.dataset.tab === 'login') {
                 t.classList.add('active');
             } else {
@@ -411,10 +462,15 @@ function switchAuthTab(tab) {
         document.getElementById('login-password').value = '';
         const loginError = document.getElementById('login-error');
         if (loginError) loginError.style.display = 'none';
+=======
+            t.classList.toggle('active', t.dataset.tab === 'login');
+        });
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } else {
         loginForm.classList.remove('active');
         registerForm.classList.add('active');
         tabs.forEach(t => {
+<<<<<<< HEAD
             if (t.dataset.tab === 'register') {
                 t.classList.add('active');
             } else {
@@ -427,6 +483,10 @@ function switchAuthTab(tab) {
         document.getElementById('reg-phone').value = '';
         const registerError = document.getElementById('register-error');
         if (registerError) registerError.style.display = 'none';
+=======
+            t.classList.toggle('active', t.dataset.tab === 'register');
+        });
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 }
 
@@ -452,7 +512,10 @@ async function handleLogin(event) {
                 uid: user.uid,
                 email: user.email,
                 name: user.displayName || email.split('@')[0],
+<<<<<<< HEAD
                 lastname: '',
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 role: 'client',
                 points: 0,
                 registrationDate: firebase.firestore.FieldValue.serverTimestamp()
@@ -463,7 +526,10 @@ async function handleLogin(event) {
             currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
         }
         localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+<<<<<<< HEAD
         await autoUpdatePastBookings();
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         closeModal('auth-modal');
         showNotification(`Добро пожаловать, ${currentUser.name || currentUser.email}!`);
         updateAuthUI();
@@ -472,8 +538,11 @@ async function handleLogin(event) {
             startBooking(prefillData);
             prefillData = {};
         }
+<<<<<<< HEAD
         document.getElementById('login-email').value = '';
         document.getElementById('login-password').value = '';
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } catch (error) {
         let errorMessage = 'Ошибка входа';
         switch (error.code) {
@@ -520,7 +589,10 @@ async function handleRegister(event) {
             uid: user.uid,
             email: email,
             name: name,
+<<<<<<< HEAD
             lastname: '',
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             phone: phone || '',
             role: 'client',
             points: 0,
@@ -537,10 +609,13 @@ async function handleRegister(event) {
             startBooking(prefillData);
             prefillData = {};
         }
+<<<<<<< HEAD
         document.getElementById('reg-name').value = '';
         document.getElementById('reg-email').value = '';
         document.getElementById('reg-pass').value = '';
         document.getElementById('reg-phone').value = '';
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } catch (error) {
         let errorMessage = 'Ошибка регистрации';
         switch (error.code) {
@@ -581,7 +656,10 @@ async function saveProfileChanges(event) {
         await db.collection('users').doc(currentUser.uid).update(updates);
         currentUser = { ...currentUser, ...updates };
         localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+<<<<<<< HEAD
         await refreshCache();
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         closeModal('edit-profile-modal');
         showNotification('Профиль обновлен!');
         if (currentPage === 'profile') renderProfile();
@@ -705,6 +783,7 @@ function updateAuthUI() {
     if (currentUser) {
         if (btn) btn.innerHTML = `<i class="fas fa-user"></i><span>${currentUser.name || currentUser.email?.split('@')[0] || 'Пользователь'}</span>`;
         if (logout) logout.style.display = 'flex';
+<<<<<<< HEAD
         const profileNav = document.getElementById('profile-nav-item');
         const masterNav = document.getElementById('master-nav-item');
         const masterScheduleNav = document.getElementById('master-schedule-item');
@@ -724,6 +803,19 @@ function updateAuthUI() {
         if (masterNav) masterNav.style.display = 'none';
         if (masterScheduleNav) masterScheduleNav.style.display = 'none';
         if (adminNav) adminNav.style.display = 'none';
+=======
+        document.getElementById('profile-nav-item').style.display = 'block';
+        document.getElementById('master-nav-item').style.display = (currentUser.role === 'master') ? 'block' : 'none';
+        document.getElementById('master-schedule-item').style.display = currentUser.role === 'master' ? 'block' : 'none';
+        document.getElementById('admin-nav-item').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+    } else {
+        if (btn) btn.innerHTML = `<i class="fas fa-user"></i><span>Войти</span>`;
+        if (logout) logout.style.display = 'none';
+        document.getElementById('profile-nav-item').style.display = 'none';
+        document.getElementById('master-nav-item').style.display = 'none';
+        document.getElementById('master-schedule-item').style.display = 'none';
+        document.getElementById('admin-nav-item').style.display = 'none';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 }
 
@@ -735,11 +827,16 @@ async function getMasterNameById(masterId) {
 }
 
 // ==============================================
+<<<<<<< HEAD
 // HOME PAGE (с живым поиском и мгновенной загрузкой)
+=======
+// HOME PAGE
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 async function renderHome() {
     const container = document.querySelector('#main-content .container');
     if (!container) return;
+<<<<<<< HEAD
     
     let allSalons = cache.salons.length ? cache.salons : [];
     let services = cache.services.length ? cache.services : [];
@@ -755,6 +852,9 @@ async function renderHome() {
     } else {
         refreshCache().catch(e => console.warn('background refresh error', e));
     }
+=======
+    if (!seedCompleted && !isSeeding) { await seedDataIfEmpty(true); clearCache(); }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     
     let heroTitle = 'BeautyBooking — запись в салоны красоты';
     let heroSubtitle = 'Лучшие мастера, удобное бронирование';
@@ -786,26 +886,44 @@ async function renderHome() {
     <h2 class="section-title">Все салоны</h2><div id="allSalons" class="salons-grid"></div>
     <h2 class="section-title">Популярные услуги</h2><div id="homeServices" class="services-grid"></div>
     <h2 class="section-title">Наши мастера</h2><div id="homeMasters" class="masters-grid"></div>
+<<<<<<< HEAD
     <h2 class="section-title">Отзывы</h2><div id="reviewsBlock" class="reviews-grid"></div>
+=======
+    <h2 class="section-title">Отзывы</h2><div id="reviewsBlock" class="salons-grid"></div>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     `;
     
     const resetBtn = document.getElementById('resetDataBtn');
     if (resetBtn) resetBtn.addEventListener('click', async () => { if (confirm('Вы уверены?')) await resetAndReseedAllData(); });
     
+<<<<<<< HEAD
     if (allSalons.length === 0) {
         const statusDiv = document.getElementById('dataStatus');
         if (statusDiv) statusDiv.innerHTML = `<div style="background:#fff3cd;border-radius:16px;padding:20px;margin:20px 0;text-align:center"><p>База пуста. Нажмите кнопку "Сбросить данные" или обновите страницу.</p></div>`;
         renderSalonCards([], 'topSalons');
         renderSalonCards([], 'allSalons');
+=======
+    let salons = await getCached('salons');
+    if (salons.length === 0) salons = await getCached('salons', true);
+    if (salons.length === 0) {
+        const statusDiv = document.getElementById('dataStatus');
+        if (statusDiv) statusDiv.innerHTML = `<div style="background:#fff3cd;border-radius:16px;padding:20px;margin:20px 0;text-align:center"><p>База пуста. Нажмите кнопку "Сбросить данные" или обновите страницу.</p></div>`;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } else {
         let personalized = [];
         if (currentUser) {
             const bookings = (await getCached('bookings')).filter(b => b.userId === currentUser.uid);
             if (bookings.length > 0) {
                 const lastBooking = bookings.sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+<<<<<<< HEAD
                 const lastSalon = allSalons.find(s => s.id === lastBooking.salonId);
                 if (lastSalon && lastSalon.specializations) {
                     personalized = allSalons.filter(s => s.id !== lastSalon.id && s.specializations?.some(spec => lastSalon.specializations.includes(spec)));
+=======
+                const lastSalon = salons.find(s => s.id === lastBooking.salonId);
+                if (lastSalon && lastSalon.specializations) {
+                    personalized = salons.filter(s => s.id !== lastSalon.id && s.specializations?.some(spec => lastSalon.specializations.includes(spec)));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 }
             }
         }
@@ -814,16 +932,25 @@ async function renderHome() {
         renderSalonCards(allSalons, 'allSalons');
     }
     
+<<<<<<< HEAD
+=======
+    let services = await getCached('services');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     if (services.length === 0) services = await getCached('services', true);
     const uniqueServices = new Map();
     services.forEach(s => { if (!uniqueServices.has(s.name)) uniqueServices.set(s.name, s); });
     const topServices = Array.from(uniqueServices.values()).slice(0, 6);
     renderServiceCards(topServices, 'homeServices');
     
+<<<<<<< HEAD
+=======
+    let masters = await getCached('masters');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     if (masters.length === 0) masters = await getCached('masters', true);
     const topMasters = masters.slice(0, 6);
     renderMasterCards(topMasters, 'homeMasters');
     
+<<<<<<< HEAD
     const reviewsBlock = document.getElementById('reviewsBlock');
     if (reviewsBlock) {
         if (reviews.length === 0) {
@@ -842,6 +969,12 @@ async function renderHome() {
     }
     
     const searchInput = document.getElementById('homeSearch');
+=======
+    const reviews = await getCached('reviews');
+    const reviewsBlock = document.getElementById('reviewsBlock');
+    if (reviewsBlock) reviewsBlock.innerHTML = reviews.slice(0,6).map(r => `<div class="card"><div class="card-content"><div class="rating">${renderStars(r.rating)}</div><p>"${r.text}"</p><p><strong>${r.authorName}</strong> — ${r.salonName}</p></div></div>`).join('');
+    
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const searchBtn = document.getElementById('searchBtn');
     
     const performLiveSearch = async () => {
@@ -867,20 +1000,40 @@ async function renderHome() {
         });
     }
     if (searchBtn) {
+<<<<<<< HEAD
         searchBtn.onclick = () => {
             if (searchInput.value.trim()) performLiveSearch();
             else showPage('salons');
+=======
+        searchBtn.onclick = async () => {
+            const q = document.getElementById('homeSearch').value.trim();
+            if (q) {
+                const allServices = await getCached('services');
+                const allMasters = await getCached('masters');
+                const lowerQ = q.toLowerCase();
+                const matchedSalonIds = new Set();
+                salons.forEach(s => { if (s.name?.toLowerCase().includes(lowerQ) || s.address?.toLowerCase().includes(lowerQ)) matchedSalonIds.add(s.id); });
+                allServices.forEach(svc => { if (svc.name?.toLowerCase().includes(lowerQ) || getCategoryName(svc.category).toLowerCase().includes(lowerQ)) if (svc.salonId) matchedSalonIds.add(svc.salonId); });
+                allMasters.forEach(m => { if (m.name?.toLowerCase().includes(lowerQ) || m.specialization?.toLowerCase().includes(lowerQ)) if (m.salonId) matchedSalonIds.add(m.salonId); });
+                if (matchedSalonIds.size > 0) showPage('salons', { search: q, filteredIds: Array.from(matchedSalonIds) });
+                else showPage('salons', { search: q });
+            } else showPage('salons');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         };
     }
 }
 
 function renderSalonCards(salons, containerId) {
     const container = document.getElementById(containerId);
+<<<<<<< HEAD
     if (!container) return;
     if (salons.length === 0) {
         container.innerHTML = '<p class="no-results" style="grid-column:1/-1; text-align:center; padding:40px;">Ничего не найдено</p>';
         return;
     }
+=======
+    if (!container || salons.length === 0) return;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const fallbackImg = getSafeImageUrl('salon','fallback');
     container.innerHTML = salons.map(s => `
     <div class="card" data-id="${s.id}"><img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3 class="card-title">${escapeHtml(s.name)}</h3><p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(s.address||'')}</p><div class="rating">${renderStars(s.rating)}</div><div class="card-actions"><button class="btn btn-outline btn-detail" data-id="${s.id}">Подробнее</button><button class="btn btn-primary btn-book" data-id="${s.id}">Записаться</button></div></div></div>
@@ -892,6 +1045,7 @@ function renderSalonCards(salons, containerId) {
 
 function renderServiceCards(services, containerId) {
     const container = document.getElementById(containerId);
+<<<<<<< HEAD
     if (!container) return;
     if (services.length === 0) {
         container.innerHTML = '<p class="no-results" style="grid-column:1/-1; text-align:center; padding:40px;">Услуги не найдены</p>';
@@ -900,29 +1054,50 @@ function renderServiceCards(services, containerId) {
     const fallbackImg = getSafeImageUrl('service','fallback');
     container.innerHTML = services.map(s => `
     <div class="card" data-id="${s.id}">
+=======
+    if (!container || services.length === 0) return;
+    const fallbackImg = getSafeImageUrl('service','fallback');
+    container.innerHTML = services.map(s => `
+    <div class="card" data-name="${encodeURIComponent(s.name)}">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         <img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'">
         <div class="card-content">
             <h3 class="card-title">${escapeHtml(s.name)}</h3>
             <p>${s.price} ₽ • ${getCategoryName(s.category)}</p>
+<<<<<<< HEAD
             <p><small>${s.salonName ? `Салон: ${escapeHtml(s.salonName)}` : 'Самозанятый'}</small></p>
             <div class="card-actions">
                 <button class="btn btn-outline btn-detail" data-id="${s.id}">Подробнее</button>
                 <button class="btn btn-primary btn-book" data-id="${s.id}">Записаться</button>
+=======
+            <div class="card-actions">
+                <button class="btn btn-outline btn-detail" data-name="${encodeURIComponent(s.name)}">Подробнее</button>
+                <button class="btn btn-primary btn-book" data-name="${encodeURIComponent(s.name)}">Записаться</button>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             </div>
         </div>
     </div>
     `).join('');
+<<<<<<< HEAD
     container.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { id: btn.dataset.id }));
     container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceId: btn.dataset.id }));
+=======
+    container.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { name: decodeURIComponent(btn.dataset.name) }));
+    container.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 function renderMasterCards(masters, containerId) {
     const container = document.getElementById(containerId);
+<<<<<<< HEAD
     if (!container) return;
     if (masters.length === 0) {
         container.innerHTML = '<p class="no-results" style="grid-column:1/-1; text-align:center; padding:40px;">Мастера не найдены</p>';
         return;
     }
+=======
+    if (!container || masters.length === 0) return;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const fallbackImg = getSafeImageUrl('master','fallback');
     container.innerHTML = masters.map(m => `
     <div class="card" data-id="${m.id}">
@@ -930,7 +1105,10 @@ function renderMasterCards(masters, containerId) {
         <div class="card-content">
             <h3 class="card-title">${escapeHtml(m.name)}</h3>
             <p><i class="fas fa-user-tie"></i> ${escapeHtml(m.specialization||'Мастер')}</p>
+<<<<<<< HEAD
             <p><i class="fas fa-store"></i> ${m.salonName ? escapeHtml(m.salonName) : 'Самозанятый'}</p>
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             <div class="rating">${renderStars(m.rating)}</div>
             <div class="card-actions">
                 <button class="btn btn-outline btn-detail" data-id="${m.id}">Подробнее</button>
@@ -949,15 +1127,22 @@ function checkAuthAndStartBooking(prefill) {
         openModal('auth-modal');
         return;
     }
+<<<<<<< HEAD
     if (currentUser.role === 'admin') {
         showNotification('Администратор не может записываться как клиент', true);
         return;
     }
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     startBooking(prefill);
 }
 
 // ==============================================
+<<<<<<< HEAD
 // LISTS & DETAILS (салоны, услуги, мастера)
+=======
+// LISTS & DETAILS
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 async function renderSalons(params = {}) {
     const container = document.querySelector('#main-content .container');
@@ -995,6 +1180,7 @@ async function renderSalons(params = {}) {
 async function renderServices() {
     const container = document.querySelector('#main-content .container');
     if (!container) return;
+<<<<<<< HEAD
     if (!seedCompleted && !isSeeding) { await seedDataIfEmpty(true); await refreshCache(); }
     container.innerHTML = `<h1 class="section-title">Все услуги</h1><div id="servicesList" class="services-grid"></div>`;
     let services = await getCached('services');
@@ -1013,11 +1199,33 @@ async function renderServices() {
     `).join('');
     list.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { id: btn.dataset.id }));
     list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceId: btn.dataset.id }));
+=======
+    if (!seedCompleted && !isSeeding) { await seedDataIfEmpty(true); clearCache(); }
+    container.innerHTML = `<h1 class="section-title">Все услуги</h1><div id="servicesList" class="services-grid"></div>`;
+    let services = await getCached('services');
+    if (services.length === 0) services = await getCached('services', true);
+    const list = document.getElementById('servicesList');
+    if (!list) return;
+    if (services.length === 0) {
+        const resetLink = (currentUser && currentUser.role === 'admin') ? ' Нажмите кнопку "Сбросить данные" на главной странице.' : '';
+        list.innerHTML = `<p class="no-results" style="grid-column:1/-1; text-align:center; padding:40px;">Услуги не найдены.${resetLink}</p>`;
+        return;
+    }
+    const unique = new Map();
+    services.forEach(s => { if(!unique.has(s.name)) unique.set(s.name, s); });
+    const fallbackImg = getSafeImageUrl('service','fallback');
+    list.innerHTML = Array.from(unique.values()).map(s => `
+    <div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3>${escapeHtml(s.name)}</h3><p>${s.price} ₽ • ${getCategoryName(s.category)}</p><div class="card-actions"><button class="btn btn-outline btn-detail" data-name="${encodeURIComponent(s.name)}">Подробнее</button><button class="btn btn-primary btn-book" data-name="${encodeURIComponent(s.name)}">Записаться</button></div></div></div>
+    `).join('');
+    list.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('service', { name: decodeURIComponent(btn.dataset.name) }));
+    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ serviceName: decodeURIComponent(btn.dataset.name) }));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 async function renderMasters() {
     const container = document.querySelector('#main-content .container');
     if (!container) return;
+<<<<<<< HEAD
     if (!seedCompleted && !isSeeding) { await seedDataIfEmpty(true); await refreshCache(); }
     container.innerHTML = `<h1 class="section-title">Наши мастера</h1>
         <div class="filters-bar" style="display:flex; gap:15px; margin-bottom:20px;">
@@ -1065,6 +1273,27 @@ async function renderMasters() {
     document.getElementById('showSalonMastersBtn').onclick = () => renderFiltered('salon');
     document.getElementById('showFreelanceMastersBtn').onclick = () => renderFiltered('freelance');
     renderFiltered('all');
+=======
+    if (!seedCompleted && !isSeeding) { await seedDataIfEmpty(true); clearCache(); }
+    container.innerHTML = `<h1 class="section-title">Наши мастера</h1><div id="mastersList" class="masters-grid"></div>`;
+    let masters = await getCached('masters');
+    if (masters.length === 0) masters = await getCached('masters', true);
+    const salons = await getCached('salons');
+    const salonMap = Object.fromEntries(salons.map(s => [s.id, s.name]));
+    const list = document.getElementById('mastersList');
+    if (!list) return;
+    if (masters.length === 0) {
+        const resetLink = (currentUser && currentUser.role === 'admin') ? ' Нажмите кнопку "Сбросить данные" на главной странице.' : '';
+        list.innerHTML = `<p class="no-results" style="grid-column:1/-1; text-align:center; padding:40px;">Мастера не найдены.${resetLink}</p>`;
+        return;
+    }
+    const fallbackImg = getSafeImageUrl('master','fallback');
+    list.innerHTML = masters.map(m => `
+    <div class="card" data-id="${m.id}"><img src="${m.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'"><div class="card-content"><h3>${escapeHtml(m.name)}</h3><p><i class="fas fa-user-tie"></i> ${escapeHtml(m.specialization||'Мастер')}</p><p><i class="fas fa-store"></i> ${escapeHtml(m.salonName||salonMap[m.salonId]||'Не указан')}</p><div class="rating">${renderStars(m.rating)}</div><div class="card-actions"><button class="btn btn-outline btn-detail" data-id="${m.id}">Подробнее</button><button class="btn btn-primary btn-book" data-id="${m.id}">Записаться</button></div></div></div>
+    `).join('');
+    list.querySelectorAll('.btn-detail').forEach(btn => btn.onclick = () => showPage('master', { id: btn.dataset.id }));
+    list.querySelectorAll('.btn-book').forEach(btn => btn.onclick = () => checkAuthAndStartBooking({ masterId: btn.dataset.id }));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 async function renderSalonDetail(id) {
@@ -1088,19 +1317,30 @@ async function renderSalonDetail(id) {
         <h2 class="section-title">Мастера салона</h2><div id="salonMasters" class="masters-grid"></div>
         <h2 class="section-title">Отзывы</h2>
         <div id="salonReviews">
+<<<<<<< HEAD
             ${currentUser ? `<div class="review-form-card"><h3><i class="fas fa-pen"></i> Оставить отзыв</h3><div class="star-rating" id="reviewStars">${[1,2,3,4,5].map(i => `<i class="far fa-star" data-value="${i}"></i>`).join('')}</div><textarea id="reviewText" class="review-textarea" rows="3" placeholder="Ваш отзыв..."></textarea><button id="submitReviewBtn" class="submit-review-btn"><i class="fas fa-paper-plane"></i> Отправить</button></div>` : '<div class="review-form-card" style="text-align:center;"><p><i class="fas fa-lock"></i> Войдите, чтобы оставить отзыв</p></div>'}
             <div id="reviewsList" class="reviews-list"></div>
+=======
+            ${currentUser ? `<div class="review-form card" style="padding:20px; margin-bottom:20px;"><h3>Оставить отзыв</h3><div class="star-rating" id="reviewStars">${[1,2,3,4,5].map(i => `<i class="far fa-star" data-value="${i}"></i>`).join('')}</div><textarea id="reviewText" class="form-input" placeholder="Ваш отзыв..." rows="3"></textarea><button id="submitReviewBtn" class="btn btn-primary" style="margin-top:10px;">Отправить</button></div>` : '<p style="margin-bottom:20px;">Войдите, чтобы оставить отзыв.</p>'}
+            <div id="reviewsList"></div>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         </div>
         `;
         document.getElementById('bookSalonBtn').onclick = () => checkAuthAndStartBooking({ salonId: id });
         const svcDiv = document.getElementById('salonServices');
         const svcFallback = getSafeImageUrl('service','fallback');
+<<<<<<< HEAD
         if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-id="${s.id}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽ • ${getCategoryName(s.category)}</p></div></div>`).join('');
         svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => showPage('service', { id: c.dataset.id }));
+=======
+        if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽ • ${getCategoryName(s.category)}</p></div></div>`).join('');
+        svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => showPage('service', { name: decodeURIComponent(c.dataset.name) }));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         const mstDiv = document.getElementById('salonMasters');
         const mstFallback = getSafeImageUrl('master','fallback');
         if (mstDiv) mstDiv.innerHTML = masters.map(m => `<div class="card" data-id="${m.id}"><img src="${m.imageUrl||mstFallback}" class="card-img" onerror="this.src='${mstFallback}'"><div class="card-content"><h3>${escapeHtml(m.name)||'Без имени'}</h3><p>${escapeHtml(m.specialization)||''}</p><div class="rating">${renderStars(m.rating)}</div></div></div>`).join('');
         mstDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: c.dataset.id, salonId: id }));
+<<<<<<< HEAD
         
         function renderReviewList() {
             const reviewsListDiv = document.getElementById('reviewsList');
@@ -1137,10 +1377,18 @@ async function renderSalonDetail(id) {
         
         renderReviewList();
         
+=======
+        const reviewsListDiv = document.getElementById('reviewsList');
+        function renderReviewList() {
+            reviewsListDiv.innerHTML = reviews.length ? reviews.map(r => `<div class="card"><div class="card-content"><div class="rating">${renderStars(r.rating)}</div><p>"${r.text}"</p><p><strong>${r.authorName}</strong> &mdash; ${new Date(r.createdAt?.seconds*1000).toLocaleDateString('ru-RU')}</p></div></div>`).join('') : '<p>Пока нет отзывов.</p>';
+        }
+        renderReviewList();
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         let selectedReviewRating = 0;
         const starElements = document.querySelectorAll('#reviewStars i');
         starElements.forEach(star => {
             star.addEventListener('click', function() { selectedReviewRating = parseInt(this.dataset.value); updateStars(selectedReviewRating); });
+<<<<<<< HEAD
             star.addEventListener('mouseenter', function() { updateStarsHover(parseInt(this.dataset.value)); });
         });
         document.getElementById('reviewStars')?.addEventListener('mouseleave', () => { updateStars(selectedReviewRating); });
@@ -1163,6 +1411,12 @@ async function renderSalonDetail(id) {
             }); 
         }
         
+=======
+            star.addEventListener('mouseenter', function() { updateStars(parseInt(this.dataset.value)); });
+        });
+        document.getElementById('reviewStars')?.addEventListener('mouseleave', () => updateStars(selectedReviewRating));
+        function updateStars(val) { starElements.forEach(s => { s.className = parseInt(s.dataset.value) <= val ? 'fas fa-star' : 'far fa-star'; }); }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         document.getElementById('submitReviewBtn')?.addEventListener('click', async () => {
             if (!currentUser) { showNotification('Войдите, чтобы оставить отзыв', true); openModal('auth-modal'); return; }
             const text = document.getElementById('reviewText').value.trim();
@@ -1176,7 +1430,11 @@ async function renderSalonDetail(id) {
                 allReviewsSnap.forEach(doc => { totalRating += doc.data().rating; count++; });
                 const avg = count ? (totalRating / count).toFixed(1) : 0;
                 await db.collection('salons').doc(id).update({ rating: parseFloat(avg) });
+<<<<<<< HEAD
                 await refreshCache();
+=======
+                clearCache();
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 showNotification('Отзыв добавлен!');
                 showPage('salon', { id: id });
             } catch(e) { showNotification('Ошибка: ' + e.message, true); }
@@ -1191,9 +1449,17 @@ async function renderMasterDetail(id) {
         const doc = await db.collection('masters').doc(id).get();
         if (!doc.exists) { showNotification('Мастер не найден', true); showPage('masters'); return; }
         const master = { id: doc.id, ...doc.data() };
+<<<<<<< HEAD
         const salonDoc = master.salonId ? await db.collection('salons').doc(master.salonId).get() : null;
         const salon = salonDoc?.exists ? salonDoc.data() : { name: 'Самозанятый мастер' };
         const services = (await getCached('services')).filter(s => master.providedServices?.includes(s.id));
+=======
+        const salonDoc = await db.collection('salons').doc(master.salonId).get();
+        const salon = salonDoc.exists ? salonDoc.data() : { name: 'Не указан' };
+        const servicesSnapshot = await db.collection('services').where('salonId', '==', master.salonId).get();
+        const services = [];
+        servicesSnapshot.forEach(doc => { const s = { id: doc.id, ...doc.data() }; if (master.providedServices?.includes(s.id)) services.push(s); });
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         const fallbackImg = getSafeImageUrl('master','fallback');
         const svcFallback = getSafeImageUrl('service','fallback');
         container.innerHTML = `
@@ -1202,8 +1468,13 @@ async function renderMasterDetail(id) {
         `;
         document.getElementById('bookMasterBtn').onclick = () => checkAuthAndStartBooking({ masterId: id });
         const svcDiv = document.getElementById('masterServices');
+<<<<<<< HEAD
         if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-id="${s.id}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽</p></div></div>`).join('');
         svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: id, serviceId: c.dataset.id }));
+=======
+        if (svcDiv) svcDiv.innerHTML = services.map(s => `<div class="card" data-name="${encodeURIComponent(s.name)}"><img src="${s.imageUrl||svcFallback}" class="card-img" onerror="this.src='${svcFallback}'"><div class="card-content"><h3>${escapeHtml(s.name)||'Без названия'}</h3><p>${s.price||0} ₽</p></div></div>`).join('');
+        svcDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: id, serviceName: decodeURIComponent(c.dataset.name) }));
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } catch(e) { console.error(e); }
 }
 
@@ -1214,6 +1485,7 @@ async function renderServiceDetail(id) {
         const services = await getCached('services');
         const service = services.find(s => s.id === id);
         if (!service) { showNotification('Услуга не найдена', true); showPage('services'); return; }
+<<<<<<< HEAD
         const masters = (await getCached('masters')).filter(m => m.providedServices?.includes(service.id));
         const fallbackImg = getSafeImageUrl('service','fallback');
         container.innerHTML = `
@@ -1234,11 +1506,26 @@ async function renderServiceDetail(id) {
             </div>
         `).join('');
         mstDiv.querySelectorAll('.card').forEach(c => c.onclick = () => checkAuthAndStartBooking({ masterId: c.dataset.id, serviceId: id }));
+=======
+        const salonIds = [...new Set(services.filter(s => s.name === decoded).map(s => s.salonId))];
+        const salons = (await getCached('salons')).filter(s => salonIds.includes(s.id));
+        const fallbackImg = getSafeImageUrl('service','fallback');
+        container.innerHTML = `
+        <div class="detail-header"><div class="detail-img"><img src="${service.imageUrl||fallbackImg}" onerror="this.src='${fallbackImg}'"></div><div class="detail-info"><h1 class="detail-title">${escapeHtml(service.name)}</h1><div class="detail-meta"><span><i class="fas fa-tag"></i> ${getCategoryName(service.category)}</span><span><i class="fas fa-ruble-sign"></i> ${service.price} ₽</span></div><button class="btn btn-primary" id="bookServiceBtn"><i class="fas fa-calendar-check"></i> Записаться</button></div></div>
+        <h2 class="section-title">Салоны, предоставляющие услугу</h2><div id="serviceSalons" class="salons-grid"></div>
+        `;
+        document.getElementById('bookServiceBtn').onclick = () => checkAuthAndStartBooking({ serviceName: decoded });
+        renderSalonCards(salons, 'serviceSalons');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } catch(e) { console.error(e); }
 }
 
 // ==============================================
+<<<<<<< HEAD
 // BOOKING (с баллами, списанием, начислением, проверкой даты)
+=======
+// BOOKING
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 let bookingServicesCache = [];
 let bookingMastersCache = [];
@@ -1260,12 +1547,16 @@ async function renderBooking() {
     if (!container) return;
     container.innerHTML = `
     <h1 class="section-title">Бронирование</h1>
+<<<<<<< HEAD
     <div class="booking-steps">
         <div class="step active" data-step="1"><div class="step-circle">1</div><div>Услуга</div></div>
         <div class="step" data-step="2"><div class="step-circle">2</div><div>Мастер</div></div>
         <div class="step" data-step="3"><div class="step-circle">3</div><div>Дата/время</div></div>
         <div class="step" data-step="4"><div class="step-circle">4</div><div>Подтверждение</div></div>
     </div>
+=======
+    <div class="booking-steps"><div class="step active" data-step="1"><div class="step-circle">1</div><div>Услуга</div></div><div class="step" data-step="2"><div class="step-circle">2</div><div>Мастер</div></div><div class="step" data-step="3"><div class="step-circle">3</div><div>Дата/время</div></div><div class="step" data-step="4"><div class="step-circle">4</div><div>Подтверждение</div></div></div>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     <div id="step1" class="booking-step active">
         <h3>Выберите услугу</h3>
         <div id="bookingServices" class="services-grid" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;"></div>
@@ -1285,6 +1576,7 @@ async function renderBooking() {
         <button id="next3" class="btn btn-primary" disabled>Далее</button>
     </div>
     <div id="step4" class="booking-step">
+<<<<<<< HEAD
         <div class="booking-confirmation-card">
             <h3>Подтверждение записи</h3>
             <div class="booking-details">
@@ -1317,6 +1609,16 @@ async function renderBooking() {
                 <button id="confirmBtn" class="btn btn-primary"><i class="fas fa-check"></i> Подтвердить</button>
             </div>
         </div>
+=======
+        <h3>Подтверждение</h3>
+        <div id="summary" class="booking-summary"></div>
+        <div class="form-group"><label>Имя</label><input type="text" id="clientName" class="form-input"></div>
+        <div class="form-group"><label>Телефон</label><input type="tel" id="clientPhone" class="form-input" placeholder="+7XXXXXXXXXX"></div>
+        <div class="form-group"><label>Комментарий</label><textarea id="clientComment" class="form-input"></textarea></div>
+        <div class="form-group" id="points-use-group" style="display:none;"><label><input type="checkbox" id="usePoints"> Использовать баллы (до 30%)</label><p id="points-info" style="font-size:0.9rem;color:var(--text-light);margin-top:5px;"></p></div>
+        <button id="prev4" class="btn btn-secondary">Назад</button>
+        <button id="confirmBtn" class="btn btn-primary">Подтвердить</button>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     </div>
     `;
     await loadBookingServices();
@@ -1335,7 +1637,11 @@ async function renderBooking() {
 async function loadBookingServices() {
     let services = await getCached('services', true);
     if (prefillData.salonId) services = services.filter(s => s.salonId === prefillData.salonId);
+<<<<<<< HEAD
     if (prefillData.serviceId) services = services.filter(s => s.id === prefillData.serviceId);
+=======
+    if (prefillData.serviceName) services = services.filter(s => s.name === prefillData.serviceName);
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     if (prefillData.masterId && prefillData.masterId !== 'any') {
         const m = (await getCached('masters', true)).find(x => x.id === prefillData.masterId);
         if (m && m.providedServices) services = services.filter(s => m.providedServices.includes(s.id));
@@ -1365,7 +1671,10 @@ async function loadBookingServices() {
             const idx = parseInt(card.dataset.idx);
             selectedService = bookingServicesCache[idx];
             const btn = document.getElementById('next1'); if (btn) btn.disabled = false;
+<<<<<<< HEAD
             pointsToEarn = Math.floor(selectedService.price * 0.05);
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         };
     });
     if (bookingServicesCache.length === 1) {
@@ -1458,11 +1767,18 @@ async function loadTimeSlots(date) {
     }
     
     const slots = [];
+<<<<<<< HEAD
     for (let h = 10; h <= 20; h++) {
         slots.push(`${h}:00`);
         if (h < 20) slots.push(`${h}:30`);
     }
     
+=======
+    for (let h=10; h<=20; h++) {
+        slots.push(`${h}:00`);
+        if (h<20) slots.push(`${h}:30`);
+    }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     let relevantMasterIds = [];
     if (selectedMaster.id === 'any') {
         const allMasters = await getCached('masters', true);
@@ -1474,7 +1790,10 @@ async function loadTimeSlots(date) {
     } else {
         relevantMasterIds = [selectedMaster.id];
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     try {
         const allBookings = await getCached('bookings', true);
         const bookedSlots = new Set();
@@ -1487,6 +1806,7 @@ async function loadTimeSlots(date) {
                 slots.forEach(slot => bookedSlots.add(slot));
                 continue;
             }
+<<<<<<< HEAD
             
             const masterBookings = allBookings.filter(b => b.masterId === masterId && b.date === date && b.status !== 'Отменена');
             
@@ -1501,20 +1821,37 @@ async function loadTimeSlots(date) {
                 
                 const slotStartMinutes = slotHour * 60 + slotMinute;
                 const slotEndMinutes = slotStartMinutes + serviceDuration + buffer;
+=======
+            const masterBookings = allBookings.filter(b => b.masterId === masterId && b.date === date && b.status !== 'Отменена');
+            for (const slotTime of slots) {
+                const [sh, sm] = slotTime.split(':').map(Number);
+                const slotStartMinutes = sh * 60 + sm;
+                const slotEndMinutes = slotStartMinutes + serviceDuration + buffer;
+                let isBusy = false;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 for (const booking of masterBookings) {
                     const [bh, bm] = booking.time.split(':').map(Number);
                     const bookStartMinutes = bh * 60 + bm;
                     const bookEndMinutes = bookStartMinutes + (selectedService.duration || 60) + buffer;
                     if (slotStartMinutes < bookEndMinutes && slotEndMinutes > bookStartMinutes) {
+<<<<<<< HEAD
                         bookedSlots.add(slotTime);
                         break;
                     }
                 }
+=======
+                        isBusy = true;
+                        break;
+                    }
+                }
+                if (isBusy) bookedSlots.add(slotTime);
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             }
         }
         
         const container = document.getElementById('timeSlots');
         if (!container) return;
+<<<<<<< HEAD
         const availableSlots = slots.filter(slot => !bookedSlots.has(slot));
         if (availableSlots.length === 0) {
             container.innerHTML = '<p style="color:red; text-align:center;">❌ Нет доступного времени на выбранную дату</p>';
@@ -1535,13 +1872,20 @@ async function loadTimeSlots(date) {
             return `<div class="time-slot ${isBooked ? 'booked' : ''}" data-time="${t}" style="cursor: ${isBooked ? 'not-allowed' : 'pointer'}; margin: 5px; ${isBooked ? 'opacity:0.4; background:#f0f0f0; text-decoration:line-through;' : ''}">${t}</div>`;
         }).join('');
         
+=======
+        container.innerHTML = slots.map(t => `<div class="time-slot ${bookedSlots.has(t)?'booked':''}" data-time="${t}" style="cursor: pointer; margin: 5px;">${t}</div>`).join('');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         container.querySelectorAll('.time-slot:not(.booked)').forEach(slot => {
             slot.onclick = () => {
                 container.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                 slot.classList.add('selected');
                 selectedTime = slot.dataset.time;
+<<<<<<< HEAD
                 const btn = document.getElementById('next3');
                 if (btn) btn.disabled = false;
+=======
+                const btn = document.getElementById('next3'); if (btn) btn.disabled = false;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             };
         });
     } catch (error) {
@@ -1551,6 +1895,7 @@ async function loadTimeSlots(date) {
 }
 
 function updateSummary() {
+<<<<<<< HEAD
     const confirmSalon = document.getElementById('confirmSalon');
     const confirmService = document.getElementById('confirmService');
     const confirmMaster = document.getElementById('confirmMaster');
@@ -1596,6 +1941,17 @@ function updateSummary() {
         } else {
             confirmPointsInfo.innerHTML = `💰 После услуги начислится +${pointsEarn} баллов`;
         }
+=======
+    const summary = document.getElementById('summary');
+    if (!summary) return;
+    const usePointsCheckbox = document.getElementById('usePoints');
+    let finalPrice = selectedService?.price || 0;
+    if (usePointsCheckbox && usePointsCheckbox.checked && currentUser) {
+        const maxDiscount = Math.floor(finalPrice * 0.3);
+        const userPoints = currentUser.points || 0;
+        const used = Math.min(maxDiscount, userPoints);
+        finalPrice = finalPrice - used;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 }
 
@@ -1606,6 +1962,7 @@ async function checkPointsAvailability() {
     const points = userData.points || 0;
     const group = document.getElementById('points-use-group');
     const info = document.getElementById('points-info');
+<<<<<<< HEAD
     if (points > 0 && selectedService) {
         group.style.display = 'block';
         const maxDiscount = Math.floor(selectedService.price * 0.3);
@@ -1613,6 +1970,10 @@ async function checkPointsAvailability() {
     } else {
         group.style.display = 'none';
     }
+=======
+    if (points > 0) { group.style.display = 'block'; const maxDiscount = Math.floor(selectedService.price * 0.3); info.innerText = `У вас ${points} баллов. Можно списать до ${maxDiscount} баллов.`; }
+    else group.style.display = 'none';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 // ИСПРАВЛЕНА ФУНКЦИЯ confirmBooking: добавлена повторная проверка занятости
@@ -1660,7 +2021,10 @@ async function confirmBooking() {
     const phone = '+7' + phoneDigits.slice(-10);
     let pointsUsed = 0;
     let finalPrice = selectedService.price;
+<<<<<<< HEAD
     let originalPrice = selectedService.price;
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     
     if (usePoints && currentUser) {
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -1696,12 +2060,18 @@ async function confirmBooking() {
         }
     } else {
         finalMasterName = await getMasterNameById(finalMasterId);
+<<<<<<< HEAD
         finalSalonId = selectedMaster.salonId;
         finalSalonName = selectedMaster.salonName;
     }
     
     try {
         // ПРОВЕРКА: нет ли уже записи на это время у этого мастера
+=======
+    }
+    
+    try {
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         const existingBookingsSnap = await db.collection('bookings')
             .where('masterId', '==', finalMasterId)
             .where('date', '==', selectedDate)
@@ -1713,11 +2083,19 @@ async function confirmBooking() {
         });
         
         if (isBusy) { 
+<<<<<<< HEAD
             showNotification('❌ Время только что занято. Пожалуйста, выберите другое время.', true); 
             return; 
         }
         
         const bookingRef = await db.collection('bookings').add({
+=======
+            showNotification('Время только что занято', true); 
+            return; 
+        }
+        
+        await db.collection('bookings').add({
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             userId: currentUser.uid,
             salonId: finalSalonId,
             salonName: finalSalonName,
@@ -1728,7 +2106,11 @@ async function confirmBooking() {
             date: selectedDate,
             time: selectedTime,
             totalPrice: finalPrice,
+<<<<<<< HEAD
             originalPrice: originalPrice,
+=======
+            originalPrice: selectedService.price,
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             pointsUsed: pointsUsed,
             status: 'Новая',
             clientName: name,
@@ -1736,9 +2118,13 @@ async function confirmBooking() {
             clientComment: comment,
             bookingDate: firebase.firestore.FieldValue.serverTimestamp()
         });
+<<<<<<< HEAD
         await logAdminAction('create', 'bookings', bookingRef.id, null, { ...selectedService, selectedMaster, selectedDate, selectedTime, finalPrice });
         await refreshCache();
         showNotification('✅ Запись создана! Начисление баллов произойдёт после выполнения услуги.');
+=======
+        showNotification('✅ Запись создана!');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         showPage('profile');
     } catch(e) { 
         showNotification('Ошибка: '+e.message, true); 
@@ -1753,14 +2139,21 @@ function attachBookingEvents() {
     const p3 = document.getElementById('prev3');
     const p4 = document.getElementById('prev4');
     const confirm = document.getElementById('confirmBtn');
+<<<<<<< HEAD
     
     if (n1) { n1.disabled = true; n1.onclick = async () => { await loadBookingMasters(); goToStep(2); }; }
     if (p2) p2.onclick = () => goToStep(1);
     if (n2) { n2.disabled = true; n2.onclick = () => { goToStep(3); const dateInput = document.getElementById('bookingDate'); if (dateInput) { selectedDate = dateInput.value; selectedTime = null; loadTimeSlots(selectedDate); } }; }
+=======
+    if (n1) { n1.disabled = true; n1.onclick = async () => { await loadBookingMasters(); goToStep(2); }; }
+    if (p2) p2.onclick = () => goToStep(1);
+    if (n2) { n2.disabled = true; n2.onclick = () => { goToStep(3); const dateInput = document.getElementById('bookingDate'); if (dateInput) { selectedDate = dateInput.value; loadTimeSlots(selectedDate); } }; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     if (p3) p3.onclick = () => goToStep(2);
     if (n3) { n3.disabled = true; n3.onclick = () => { if (selectedTime) { goToStep(4); updateSummary(); checkPointsAvailability(); } }; }
     if (p4) p4.onclick = () => goToStep(3);
     if (confirm) confirm.onclick = confirmBooking;
+<<<<<<< HEAD
     
     const dateInput = document.getElementById('bookingDate');
     if (dateInput) {
@@ -1791,6 +2184,10 @@ function attachBookingEvents() {
         });
     }
     
+=======
+    const dateInput = document.getElementById('bookingDate');
+    if (dateInput) { dateInput.min = new Date().toISOString().split('T')[0]; dateInput.value = dateInput.min; selectedDate = dateInput.min; dateInput.onchange = () => { selectedDate = dateInput.value; loadTimeSlots(selectedDate); }; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const usePointsCheckbox = document.getElementById('usePoints');
     if (usePointsCheckbox) {
         usePointsCheckbox.addEventListener('change', () => {
@@ -1808,7 +2205,11 @@ function goToStep(step) {
 }
 
 // ==============================================
+<<<<<<< HEAD
 // PROFILE (начисление баллов за выполненные)
+=======
+// PROFILE
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 async function renderProfile() {
     if (!currentUser) return showPage('home');
@@ -1832,13 +2233,21 @@ async function renderProfile() {
         let badgeClass = 'badge-new';
         if (b.status === 'Выполнена') badgeClass = 'badge-done';
         if (b.status === 'Отменена') badgeClass = 'badge-cancelled';
+<<<<<<< HEAD
         const discountDisplay = b.pointsUsed ? `<p>Списано баллов: ${b.pointsUsed}</p>` : '';
         return `<div class="card" data-id="${b.id}"><div class="card-content">
+=======
+        return `<div class="card"><div class="card-content">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             <h3>${escapeHtml(b.salonName||'Салон')}</h3>
             <p>${escapeHtml(b.serviceName||'Услуга')} • ${escapeHtml(b.masterName||'Мастер')}</p>
             <p>${b.date||''} в ${b.time||''}</p>
             <p>Статус: <span class="badge ${badgeClass}">${b.status||'Неизвестно'}</span></p>
+<<<<<<< HEAD
             ${discountDisplay}
+=======
+            ${b.pointsUsed ? `<p>Списано баллов: ${b.pointsUsed}</p>` : ''}
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             ${b.clientComment?`<p>Комент: ${escapeHtml(b.clientComment)}</p>`:''}
             ${b.status==='Новая'?`<button class="btn btn-outline btn-sm" onclick="cancelBooking('${b.id}')">Отменить</button>`:''}
         </div></div>`;
@@ -1867,9 +2276,13 @@ async function processPointsAwarding() {
         });
         await batch.commit();
         showNotification(`✅ Начислено ${totalPointsToAdd} баллов!`);
+<<<<<<< HEAD
         await refreshCache();
         currentUser.points = (currentUser.points || 0) + totalPointsToAdd;
         localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+=======
+        clearCache();
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 }
 
@@ -1894,8 +2307,12 @@ async function cancelBooking(id) {
         showNotification('Запись отменена');
         renderProfile();
     } catch(e) {
+<<<<<<< HEAD
         console.error(e);
         showNotification('Ошибка отмены: ' + e.message, true);
+=======
+        showNotification('Ошибка отмены', true);
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 }
 
@@ -1914,8 +2331,13 @@ async function renderMasterCabinet() {
         return;
     }
     const master = { id: masterDoc.id, ...masterDoc.data() };
+<<<<<<< HEAD
     const salonDoc = master.salonId ? await db.collection('salons').doc(master.salonId).get() : null;
     const salon = salonDoc?.exists ? salonDoc.data() : { name: 'Самозанятый мастер' };
+=======
+    const salonDoc = await db.collection('salons').doc(master.salonId).get();
+    const salon = salonDoc.exists ? salonDoc.data() : { name: 'Не указан' };
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 
     container.innerHTML = `
     <h1 class="section-title">Мастер-панель</h1>
@@ -1928,23 +2350,38 @@ async function renderMasterCabinet() {
             <div class="user-detail-row"><strong>Телефон:</strong> ${escapeHtml(currentUser.phone || '—')}</div>
             <div class="user-detail-row"><strong>Салон:</strong> ${escapeHtml(salon.name)}</div>
             <div class="user-detail-row"><strong>Специализация:</strong> ${escapeHtml(master.specialization || '—')}</div>
+<<<<<<< HEAD
             <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+=======
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 <button class="btn btn-outline btn-sm" id="editMasterProfileBtn"><i class="fas fa-edit"></i> Редактировать профиль</button>
                 <button class="btn btn-outline btn-sm" style="color:red; border-color:red;" id="deleteMasterProfileBtn"><i class="fas fa-trash"></i> Удалить профиль</button>
             </div>
         </div>
+<<<<<<< HEAD
         <div style="flex: 3; min-width: 300px;">
+=======
+        <div style="flex: 3; min-width: 600px;">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             <div class="auth-tabs" style="margin-bottom:20px;">
                 <button class="auth-tab active" data-tab="bookings">Управление записями</button>
                 <button class="auth-tab" data-tab="actions">Мои действия</button>
             </div>
             <div id="masterBookingsTab">
                 <h3>Мои записи</h3>
+<<<<<<< HEAD
                 <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                     <table class="history-table" id="masterBookingsTable">
                         <thead>
                             <tr><th>Клиент</th><th>Услуга</th><th>Дата</th><th>Время</th><th>Телефон</th><th>Статус</th><th>Действия</th></tr></thead>
                         <tbody id="masterBookingsTableBody"></tbody>
+=======
+                <div style="max-height: 500px; overflow-y: auto;">
+                    <table class="history-table" id="masterBookingsTable">
+                        <thead><tr><th>Клиент</th><th>Услуга</th><th>Дата</th><th>Время</th><th>Телефон</th><th>Статус</th><th>Действия</th></tr></thead>
+                        <tbody></tbody>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                     </table>
                 </div>
             </div>
@@ -1956,7 +2393,32 @@ async function renderMasterCabinet() {
     </div>
     `;
 
+<<<<<<< HEAD
     await loadMasterBookings(master.id);
+=======
+    const bookings = (await getCached('bookings'))
+        .filter(b => b.masterId === master.id)
+        .sort((a,b) => new Date(b.date) - new Date(a.date));
+    const tbody = document.querySelector('#masterBookingsTable tbody');
+    tbody.innerHTML = bookings.length ? bookings.map(b => `
+        <tr>
+            <td>${escapeHtml(b.clientName)}</td>
+            <td>${escapeHtml(b.serviceName)}</td>
+            <td>${b.date}</td>
+            <td>${b.time}</td>
+            <td>${escapeHtml(b.clientPhone)}</td>
+            <td><span class="badge badge-${b.status === 'Выполнена' ? 'done' : b.status === 'Отменена' ? 'cancelled' : 'new'}">${b.status}</span></td>
+            <td>
+                <select onchange="updateBookingStatusMaster('${b.id}', this.value)" style="padding:4px; border-radius:8px;">
+                    <option value="Новая" ${b.status === 'Новая' ? 'selected' : ''}>Новая</option>
+                    <option value="Подтверждена" ${b.status === 'Подтверждена' ? 'selected' : ''}>Подтверждена</option>
+                    <option value="Выполнена" ${b.status === 'Выполнена' ? 'selected' : ''}>Выполнена</option>
+                    <option value="Отменена" ${b.status === 'Отменена' ? 'selected' : ''}>Отменена</option>
+                </select>
+            </td>
+        </tr>
+    `).join('') : '<tr><td colspan="7">Нет записей</td>';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.onclick = () => {
@@ -2034,10 +2496,15 @@ window.updateBookingStatusMaster = async (bookingId, newStatus) => {
         await logAdminAction('update', 'bookings', bookingId, old, { ...old, status: newStatus });
         await refreshCache();
         showNotification(`Статус изменён на ${newStatus}`);
+<<<<<<< HEAD
         const masterDoc = (await db.collection('masters').where('userId', '==', currentUser.uid).get()).docs[0];
         if (masterDoc) {
             await loadMasterBookings(masterDoc.id);
         }
+=======
+        clearCache();
+        renderMasterCabinet();
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     } catch(e) {
         showNotification('Ошибка: '+e.message, true);
     }
@@ -2078,7 +2545,11 @@ async function renderMasterSchedule() {
 
     const masterDoc = (await db.collection('masters').where('userId', '==', currentUser.uid).get()).docs[0];
     if (!masterDoc) {
+<<<<<<< HEAD
         container.innerHTML = '<div class="error-card"><i class="fas fa-exclamation-circle"></i><p>Профиль мастера не найден. Обратитесь к администратору.</p></div>';
+=======
+        container.innerHTML = '<p>Профиль мастера не найден.</p>';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         return;
     }
     const master = { id: masterDoc.id, ...masterDoc.data() };
@@ -2093,6 +2564,7 @@ async function renderMasterSchedule() {
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
         const adjustedFirstDay = firstDay === 0 ? 7 : firstDay;
 
+<<<<<<< HEAD
         let calendarHTML = `
             <div class="schedule-calendar">
                 <div class="calendar-header">
@@ -2106,6 +2578,13 @@ async function renderMasterSchedule() {
 
         for (let i = 1; i < adjustedFirstDay; i++) {
             calendarHTML += '<div class="calendar-day empty"></div>';
+=======
+        let calendarHTML = `<h2>${monthNames[currentMonth]} ${currentYear}</h2>`;
+        calendarHTML += '<table class="calendar-table"><thead><tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th><tr></thead><tbody><tr>';
+
+        for (let i = 1; i < adjustedFirstDay; i++) {
+            calendarHTML += '<td></td>';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
@@ -2118,6 +2597,7 @@ async function renderMasterSchedule() {
             let classes = '';
             if (isToday) classes += ' today';
             if (isDayOff) classes += ' day-off';
+<<<<<<< HEAD
             if (hasBookings && !isDayOff) classes += ' has-bookings';
 
             calendarHTML += `<div class="calendar-day${classes}" data-date="${date}">${day}</div>`;
@@ -2126,11 +2606,23 @@ async function renderMasterSchedule() {
                 </div>
             </div>
         `;
+=======
+            else if (hasBookings) classes += ' has-bookings';
+
+            calendarHTML += `<td class="${classes}" data-date="${date}">${day}</td>`;
+
+            if ((day + adjustedFirstDay - 1) % 7 === 0) {
+                calendarHTML += '</tr>';
+            }
+        }
+        calendarHTML += '</tbody></table>';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         return calendarHTML;
     }
 
     async function loadBookingsForDate(date) {
         const bookings = (await getCached('bookings')).filter(b => b.masterId === master.id && b.date === date && b.status !== 'Отменена');
+<<<<<<< HEAD
         const container = document.getElementById('bookings-on-date');
         if (!container) return;
         
@@ -2143,12 +2635,24 @@ async function renderMasterSchedule() {
                     <div class="booking-service">${escapeHtml(b.serviceName)}</div>
                     <div class="booking-client"><i class="fas fa-user"></i> ${escapeHtml(b.clientName)}<span class="client-phone"> | ${escapeHtml(b.clientPhone)}</span></div>
                     <div class="booking-status"><span class="status-badge status-${b.status === 'Выполнена' ? 'done' : b.status === 'Отменена' ? 'cancelled' : 'new'}">${b.status}</span></div>
+=======
+        const listDiv = document.getElementById('bookings-on-date');
+        if (bookings.length === 0) {
+            listDiv.innerHTML = '<p>На эту дату нет записей</p>';
+        } else {
+            listDiv.innerHTML = bookings.map(b => `
+                <div style="border:1px solid #ddd; padding:10px; margin:8px 0; border-radius:8px;">
+                    <strong>${b.time}</strong> — ${escapeHtml(b.serviceName)}<br>
+                    Клиент: ${escapeHtml(b.clientName)} | Тел.: ${escapeHtml(b.clientPhone)}
+                    <span class="badge badge-${b.status === 'Выполнена' ? 'done' : b.status === 'Отменена' ? 'cancelled' : 'new'}">${b.status}</span>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 </div>
             `).join('')}</div>`;
         }
     }
 
     container.innerHTML = `
+<<<<<<< HEAD
         <div class="master-schedule-container">
             <h1 class="section-title">Моё рабочее время</h1>
             <div class="schedule-wrapper">
@@ -2172,6 +2676,25 @@ async function renderMasterSchedule() {
                             <button class="btn btn-primary btn-sm" id="addDayOffBtn">Добавить</button>
                         </div>
                     </div>
+=======
+        <h1 class="section-title">Моё рабочее время</h1>
+        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <div class="calendar-controls">
+                    <button class="btn btn-outline btn-sm" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                    <span id="currentMonthLabel"></span>
+                    <button class="btn btn-outline btn-sm" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div id="calendarContainer"></div>
+            </div>
+            <div style="flex: 1; min-width: 300px;">
+                <h3>Записи на <span id="selectedDateLabel">—</span></h3>
+                <div id="bookings-on-date"></div>
+                <div style="margin-top: 20px;">
+                    <h3>Добавить выходной</h3>
+                    <input type="date" id="new-dayoff" class="form-input" style="width:auto;">
+                    <button class="btn btn-primary btn-sm" id="addDayOffBtn">Добавить</button>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 </div>
             </div>
         </div>
@@ -2180,6 +2703,7 @@ async function renderMasterSchedule() {
     const updateCalendar = () => {
         document.getElementById('calendarContainer').innerHTML = renderCalendar();
         document.getElementById('currentMonthLabel').textContent = `${new Date(currentYear, currentMonth).toLocaleString('ru', { month: 'long' })} ${currentYear}`;
+<<<<<<< HEAD
         
         document.querySelectorAll('.calendar-day:not(.empty)').forEach(day => {
             day.addEventListener('click', async () => {
@@ -2187,6 +2711,12 @@ async function renderMasterSchedule() {
                 document.getElementById('selectedDateLabel').textContent = formatDateDisplay(date);
                 document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
                 day.classList.add('selected');
+=======
+        document.querySelectorAll('.calendar-table td[data-date]').forEach(td => {
+            td.addEventListener('click', async () => {
+                const date = td.dataset.date;
+                document.getElementById('selectedDateLabel').textContent = date;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 await loadBookingsForDate(date);
             });
         });
@@ -2404,12 +2934,19 @@ async function renderAdmin() {
 async function refreshAdminData() {
     const [services, salons, masters] = await Promise.all([getCached('services', true), getCached('salons', true), getCached('masters', true)]);
     const salonMap = Object.fromEntries(salons.map(s => [s.id, s.name]));
+<<<<<<< HEAD
     const fallbackImg = getSafeImageUrl('service','fallback');
+=======
+
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const svcDiv = document.getElementById('adminServices');
     if (svcDiv) {
         svcDiv.innerHTML = services.map(s => `
             <div class="card">
+<<<<<<< HEAD
                 <img src="${s.imageUrl||fallbackImg}" class="card-img" onerror="this.src='${fallbackImg}'">
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 <div class="card-content">
                     <h3>${escapeHtml(s.name)}</h3>
                     <p>${escapeHtml(salonMap[s.salonId]||'Не указан')} • ${s.price} ₽</p>
@@ -2434,11 +2971,17 @@ async function refreshAdminData() {
     }
 
     const salDiv = document.getElementById('adminSalons');
+<<<<<<< HEAD
     const fallbackSalonImg = getSafeImageUrl('salon','fallback');
     if (salDiv) {
         salDiv.innerHTML = salons.map(s => `
             <div class="card">
                 <img src="${s.imageUrl||fallbackSalonImg}" class="card-img" onerror="this.src='${fallbackSalonImg}'">
+=======
+    if (salDiv) {
+        salDiv.innerHTML = salons.map(s => `
+            <div class="card">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 <div class="card-content">
                     <h3>${escapeHtml(s.name)}</h3>
                     <p>${escapeHtml(s.address||'')}</p>
@@ -2451,6 +2994,7 @@ async function refreshAdminData() {
         `).join('');
         salDiv.querySelectorAll('.edit-sal').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openSalonModal(btn.dataset.id); });
         salDiv.querySelectorAll('.del-sal').forEach(btn => btn.onclick = async () => {
+<<<<<<< HEAD
             if (confirm('Удалить салон? Это также удалит всех его мастеров и услуги.')) {
                 const salonId = btn.dataset.id;
                 const old = salons.find(x => x.id === salonId);
@@ -2461,6 +3005,12 @@ async function refreshAdminData() {
                 mastersToDelete.forEach(doc => batch.delete(doc.ref));
                 batch.delete(db.collection('salons').doc(salonId));
                 await batch.commit();
+=======
+            if (confirm('Удалить салон?')) {
+                const salonId = btn.dataset.id;
+                const old = salons.find(x => x.id === salonId);
+                await db.collection('salons').doc(salonId).delete();
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 await logAdminAction('delete', 'salons', salonId, old, null);
                 await clearCache();
                 await refreshAdminData();
@@ -2469,11 +3019,17 @@ async function refreshAdminData() {
     }
 
     const mstDiv = document.getElementById('adminMasters');
+<<<<<<< HEAD
     const fallbackMasterImg = getSafeImageUrl('master','fallback');
     if (mstDiv) {
         mstDiv.innerHTML = masters.map(m => `
             <div class="card">
                 <img src="${m.imageUrl||fallbackMasterImg}" class="card-img" onerror="this.src='${fallbackMasterImg}'">
+=======
+    if (mstDiv) {
+        mstDiv.innerHTML = masters.map(m => `
+            <div class="card">
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 <div class="card-content">
                     <h3>${escapeHtml(m.name)}</h3>
                     <p>${escapeHtml(m.specialization||'')} • ${escapeHtml(salonMap[m.salonId]||'')}</p>
@@ -2502,7 +3058,11 @@ async function refreshAdminData() {
 }
 
 // ==============================================
+<<<<<<< HEAD
 // CRUD MODALS
+=======
+// CRUD MODALS HELPERS
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 function resetMasterForm() {
     document.getElementById('mast-name').value = '';
@@ -2518,10 +3078,14 @@ function resetMasterForm() {
 function openServiceModal(serviceId = null) {
     const salons = cache.salons;
     const select = document.getElementById('serv-salon');
+<<<<<<< HEAD
     if (select) {
         select.innerHTML = '<option value="freelance">Самозанятый (без салона)</option>' + 
             salons.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     }
+=======
+    if (select) select.innerHTML = salons.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     document.getElementById('service-form').reset();
     document.getElementById('serv-id').value = '';
     document.getElementById('serv-image').value = '';
@@ -2534,12 +3098,16 @@ function openServiceModal(serviceId = null) {
             document.getElementById('serv-name').value = service.name || '';
             document.getElementById('serv-cat').value = service.category || 'hair';
             document.getElementById('serv-price').value = service.price || 0;
+<<<<<<< HEAD
             const salonExists = salons.some(s => s.id === service.salonId);
             if (service.salonId && salonExists) {
                 document.getElementById('serv-salon').value = service.salonId;
             } else {
                 document.getElementById('serv-salon').value = 'freelance';
             }
+=======
+            document.getElementById('serv-salon').value = service.salonId || '';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             document.getElementById('serv-image').value = service.imageUrl || '';
             document.getElementById('service-modal-title').textContent = 'Редактировать услугу';
         }
@@ -2551,6 +3119,7 @@ function openServiceModal(serviceId = null) {
         const id = document.getElementById('serv-id').value;
         const name = document.getElementById('serv-name').value.trim();
         const price = +document.getElementById('serv-price').value;
+<<<<<<< HEAD
         let salonId = document.getElementById('serv-salon').value;
         
         if (!name || !price) { 
@@ -2570,16 +3139,31 @@ function openServiceModal(serviceId = null) {
         let imageUrl = document.getElementById('serv-image').value.trim();
         if (!imageUrl) imageUrl = getSafeImageUrl('service', name);
         
+=======
+        const salonId = document.getElementById('serv-salon').value;
+        if (!name || !price || !salonId) { showNotification('Заполните все поля', true); return; }
+        const salonName = cache.salons.find(s => s.id === salonId)?.name || '';
+        let imageUrl = document.getElementById('serv-image').value.trim();
+        if (!imageUrl) imageUrl = getSafeImageUrl('service', name);
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         const newData = { 
             name, 
             category: document.getElementById('serv-cat').value, 
             price, 
+<<<<<<< HEAD
             salonId: salonId || null,
             salonName: salonName,
             duration: 60, 
             imageUrl 
         };
         
+=======
+            salonId, 
+            salonName, 
+            duration: 60, 
+            imageUrl 
+        };
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         try {
             if (id) {
                 const old = (await db.collection('services').doc(id).get()).data();
@@ -2592,9 +3176,13 @@ function openServiceModal(serviceId = null) {
             closeModal('service-modal');
             await clearCache();
             await refreshAdminData();
+<<<<<<< HEAD
         } catch (e) { 
             showNotification('Ошибка: ' + e.message, true); 
         }
+=======
+        } catch (e) { showNotification('Ошибка: ' + e.message, true); }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     };
 }
 
@@ -2662,6 +3250,7 @@ function openMasterModal(masterId = null) {
     const salons = cache.salons;
     const salonSelect = document.getElementById('mast-salon');
     if (salonSelect) {
+<<<<<<< HEAD
         salonSelect.innerHTML = '<option value="">Самозанятый (без салона)</option>' + salons.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
         salonSelect.value = '';
     }
@@ -2669,6 +3258,12 @@ function openMasterModal(masterId = null) {
         if (salonSelect.value) loadMasterServices(salonSelect.value);
         else document.getElementById('master-services-checkboxes').innerHTML = '<p>Для самозанятых мастера услуги можно добавить позже в личном кабинете.</p>';
     };
+=======
+        salonSelect.innerHTML = salons.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+        salonSelect.value = '';
+    }
+    salonSelect.onchange = () => { loadMasterServices(salonSelect.value); };
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     if (masterId) {
         const master = cache.masters.find(m => m.id === masterId);
         if (master) {
@@ -2676,7 +3271,11 @@ function openMasterModal(masterId = null) {
             document.getElementById('mast-name').value = master.name || '';
             document.getElementById('mast-salon').value = master.salonId || '';
             document.getElementById('mast-image').value = master.imageUrl || '';
+<<<<<<< HEAD
             if (master.salonId) loadMasterServices(master.salonId, master.providedServices || []);
+=======
+            loadMasterServices(master.salonId, master.providedServices || []);
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
             document.getElementById('master-modal-title').textContent = 'Редактировать мастера';
         }
     }
@@ -2691,7 +3290,11 @@ async function addMaster(event) {
     const salonId = document.getElementById('mast-salon').value;
     const imageUrl = document.getElementById('mast-image').value.trim();
     const masterId = document.getElementById('mast-id').value;
+<<<<<<< HEAD
     if (!name) { showNotification('Заполните имя мастера', true); return; }
+=======
+    if (!name || !salonId) { showNotification('Заполните обязательные поля', true); return; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const checkboxes = document.querySelectorAll('#master-services-checkboxes input[type="checkbox"]:checked');
     const providedServices = Array.from(checkboxes).map(cb => cb.value);
     let specialization = '';
@@ -2699,11 +3302,16 @@ async function addMaster(event) {
         const services = await getCached('services', true);
         specialization = providedServices.map(id => services.find(s => s.id === id)?.name).filter(Boolean).join(', ');
     }
+<<<<<<< HEAD
     let salonName = null;
     if (salonId) {
         const salon = cache.salons.find(s => s.id === salonId);
         salonName = salon ? salon.name : null;
     }
+=======
+    const salon = cache.salons.find(s => s.id === salonId);
+    const salonName = salon ? salon.name : '';
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     
     let userId = null;
     if (masterId) {
@@ -2711,7 +3319,11 @@ async function addMaster(event) {
         userId = existingMaster?.userId || null;
     }
     
+<<<<<<< HEAD
     if (!userId && !masterId) {
+=======
+    if (!userId) {
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         try {
             const email = `master_${Date.now()}_${Math.floor(Math.random()*10000)}@temp.com`;
             const password = 'Master123!';
@@ -2722,7 +3334,10 @@ async function addMaster(event) {
                 uid: userId,
                 email: email,
                 name: name,
+<<<<<<< HEAD
                 lastname: '',
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 role: 'master',
                 points: 0,
                 registrationDate: firebase.firestore.FieldValue.serverTimestamp()
@@ -2736,8 +3351,13 @@ async function addMaster(event) {
     
     const masterData = {
         name,
+<<<<<<< HEAD
         salonId: salonId || null,
         salonName: salonName,
+=======
+        salonId,
+        salonName,
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         userId,
         imageUrl: imageUrl || getSafeImageUrl('master', name),
         specialization,
@@ -2768,7 +3388,11 @@ document.getElementById('cancel-mast')?.addEventListener('click', () => {
 });
 
 // ==============================================
+<<<<<<< HEAD
 // АДМИНСКИЕ ТАБЛИЦЫ (продолжение)
+=======
+// ОСТАЛЬНЫЕ ФУНКЦИИ (пользователи, история, сброс данных)
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 async function loadAllBookingsTable() {
     const tbody = document.getElementById('bookingsTableBody');
@@ -2781,16 +3405,21 @@ async function loadAllBookingsTable() {
     if (search) bookings = bookings.filter(b => (b.clientName && b.clientName.toLowerCase().includes(search)) || (b.serviceName && b.serviceName.toLowerCase().includes(search)) || (b.masterName && b.masterName.toLowerCase().includes(search)));
     if (statusFilter !== 'all') bookings = bookings.filter(b => b.status === statusFilter);
     if (dateFilter) bookings = bookings.filter(b => b.date === dateFilter);
+<<<<<<< HEAD
     if (bookings.length === 0) { 
         tbody.innerHTML = '<tr><td colspan="9">Нет записей</td></tr>'; 
         return; 
     }
+=======
+    if (bookings.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Нет записей</td></tr>'; return; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const masters = await getCached('masters');
     const masterMap = Object.fromEntries(masters.map(m => [m.id, m.name]));
     tbody.innerHTML = bookings.map(b => {
         const masterName = b.masterName || masterMap[b.masterId] || 'Неизвестный мастер';
         return `
         <tr>
+<<<<<<< HEAD
             <td data-label="Дата/время">${b.date || ''} ${b.time || ''}</td>
             <td data-label="Клиент">${escapeHtml(b.clientName || '—')}</td>
             <td data-label="Услуга">${escapeHtml(b.serviceName || '—')}</td>
@@ -2798,6 +3427,15 @@ async function loadAllBookingsTable() {
             <td data-label="Салон">${escapeHtml(b.salonName || '—')}</td>
             <td data-label="Сумма">${b.totalPrice || 0} ₽</td>
             <td data-label="Статус">
+=======
+            <td>${b.date || ''} ${b.time || ''}</td>
+            <td>${escapeHtml(b.clientName || '—')}</td>
+            <td>${escapeHtml(b.serviceName || '—')}</td>
+            <td>${escapeHtml(masterName)}</td>
+            <td>${escapeHtml(b.salonName || '—')}</td>
+            <td>${b.totalPrice || 0} ₽</td>
+            <td>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
                 <select onchange="updateBookingStatusAdmin('${b.id}', this.value)" style="padding:4px; border-radius:8px;">
                     <option value="Новая" ${b.status === 'Новая' ? 'selected' : ''}>Новая</option>
                     <option value="Подтверждена" ${b.status === 'Подтверждена' ? 'selected' : ''}>Подтверждена</option>
@@ -2805,6 +3443,7 @@ async function loadAllBookingsTable() {
                     <option value="Отменена" ${b.status === 'Отменена' ? 'selected' : ''}>Отменена</option>
                 </select>
             </td>
+<<<<<<< HEAD
             <td data-label="История"><button class="btn btn-sm btn-outline" onclick="showBookingHistory('${b.id}')">История</button></td>
             <td data-label="Удалить"><button class="btn btn-sm btn-danger" onclick="deleteBookingAdmin('${b.id}')" style="background:#ef4444; color:white;">Удалить</button></td>
         </tr>
@@ -2823,6 +3462,13 @@ async function loadAllBookingsTable() {
         if (dateInput) dateInput.value = '';
         loadAllBookingsTable();
     };
+=======
+            <td><button class="btn btn-sm btn-outline" onclick="showBookingHistory('${b.id}')">История</button></td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteBookingAdmin('${b.id}')" style="background:#ef4444; color:white;">Удалить</button></td>
+        </tr>
+        `;
+    }).join('');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 }
 
 window.updateBookingStatusAdmin = async (bookingId, newStatus) => {
@@ -2850,6 +3496,7 @@ window.deleteBookingAdmin = async (bookingId) => {
 };
 
 window.showBookingHistory = async (bookingId) => {
+<<<<<<< HEAD
     try {
         const actions = await db.collection('admin_actions')
             .where('docId', '==', bookingId)
@@ -2875,6 +3522,22 @@ window.showBookingHistory = async (bookingId) => {
         } else {
             showNotification('Ошибка загрузки истории: '+e.message, true);
         }
+=======
+    const actions = await db.collection('admin_actions')
+        .where('docId', '==', bookingId)
+        .where('collection', '==', 'bookings')
+        .orderBy('timestamp', 'desc')
+        .get();
+    if (!actions.empty) {
+        let msg = `История изменений записи ${bookingId}:\n`;
+        actions.forEach(doc => {
+            const a = doc.data();
+            msg += `${formatDate(a.timestamp)} — ${a.actionType}: ${a.oldData ? 'было: '+JSON.stringify(a.oldData) : ''} ${a.newData ? 'стало: '+JSON.stringify(a.newData) : ''}\n`;
+        });
+        alert(msg);
+    } else {
+        alert('История изменений не найдена.');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     }
 };
 
@@ -2887,6 +3550,7 @@ async function loadAllReviewsTable() {
     reviews = reviews.sort((a,b) => new Date(b.createdAt?.seconds*1000) - new Date(a.createdAt?.seconds*1000));
     if (search) reviews = reviews.filter(r => (r.salonName && r.salonName.toLowerCase().includes(search)) || (r.authorName && r.authorName.toLowerCase().includes(search)) || (r.text && r.text.toLowerCase().includes(search)));
     if (ratingFilter !== 'all') { const minRating = parseInt(ratingFilter); reviews = reviews.filter(r => r.rating >= minRating); }
+<<<<<<< HEAD
     if (reviews.length === 0) { 
         tbody.innerHTML = '<tr><td colspan="6">Нет отзывов</td></tr>'; 
         return; 
@@ -2899,6 +3563,17 @@ async function loadAllReviewsTable() {
             <td data-label="Текст">${escapeHtml(r.text || '')}</td>
             <td data-label="Дата">${formatDate(r.createdAt)}</td>
             <td data-label="Действия"><button class="btn btn-sm btn-danger" onclick="deleteReviewAdmin('${r.id}')" style="background:#ef4444; color:white;">Удалить</button></td>
+=======
+    if (reviews.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет отзывов</td></tr>'; return; }
+    tbody.innerHTML = reviews.map(r => `
+        <tr>
+            <td>${escapeHtml(r.salonName || '—')}</td>
+            <td>${escapeHtml(r.authorName || '—')}</td>
+            <td>${'★'.repeat(Math.floor(r.rating))}${'☆'.repeat(5-Math.floor(r.rating))} (${r.rating})</td>
+            <td>${escapeHtml(r.text || '')}</td>
+            <td>${formatDate(r.createdAt)}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteReviewAdmin('${r.id}')" style="background:#ef4444; color:white;">Удалить</button></td>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         </tr>
     `).join('');
     
@@ -2939,10 +3614,14 @@ async function loadUsersTable() {
     let users = await getCached('users', true);
     const roleFilter = document.getElementById('roleFilter')?.value || 'all';
     if (roleFilter !== 'all') users = users.filter(u => u.role === roleFilter);
+<<<<<<< HEAD
     if (users.length === 0) { 
         tbody.innerHTML = '<tr><td colspan="6">Пользователи не найдены.</td></tr>'; 
         return; 
     }
+=======
+    if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Пользователи не найдены.</td></tr>'; return; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     tbody.innerHTML = users.map(u => `
         <tr>
             <td data-label="Имя">${escapeHtml(u.name || '')} ${escapeHtml(u.lastname || '')}</td>
@@ -3063,10 +3742,14 @@ async function loadAdminHistory() {
     tbody.innerHTML = '<tr><td colspan="4">Загрузка...</td></tr>';
     const snap = await db.collection('admin_actions').orderBy('timestamp', 'desc').limit(100).get();
     const actions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+<<<<<<< HEAD
     if (actions.length === 0) { 
         tbody.innerHTML = '<tr><td colspan="4">История пуста</td></tr>'; 
         return; 
     }
+=======
+    if (actions.length === 0) { tbody.innerHTML = '<tr><td colspan="4">История пуста</td></tr>'; return; }
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const actionTypeMap = { create: '➕ Добавление', update: '✏️ Изменение', delete: '🗑️ Удаление' };
     const collectionMap = { users: 'Пользователь', masters: 'Мастер', services: 'Услуга', salons: 'Салон', bookings: 'Бронирование', reviews: 'Отзыв' };
     tbody.innerHTML = actions.map(a => {
@@ -3075,10 +3758,17 @@ async function loadAdminHistory() {
         const hasUndo = (a.actionType === 'delete' && a.oldData) || (a.actionType === 'update' && a.oldData) || (a.actionType === 'create');
         return `
         <tr>
+<<<<<<< HEAD
             <td data-label="Действие">${actionText}</td>
             <td data-label="Объект">${objectText} (${a.docId?.slice(0,8)}...)</td>
             <td data-label="Время">${a.timestamp ? formatDate(a.timestamp) : 'Только что'}</td>
             <td data-label="Откат">${hasUndo ? `<button class="undo-btn" onclick="undoAction('${a.id}', '${a.collection}', '${a.docId}')">Откатить</button>` : '-'}</td>
+=======
+            <td>${actionText}</td>
+            <td>${objectText} (${a.docId?.slice(0,8)}...)</td>
+            <td>${a.timestamp ? formatDate(a.timestamp) : 'Только что'}</td>
+            <td>${hasUndo ? `<button class="undo-btn" onclick="undoAction('${a.id}', '${a.collection}', '${a.docId}')">Откатить</button>` : '-'}</td>
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         </tr>
         `;
     }).join('');
@@ -3129,6 +3819,187 @@ async function resetAndReseedAllData() {
     }
 }
 
+<<<<<<< HEAD
+=======
+async function seedDataIfEmpty(force = false) {
+    if (!force && (await db.collection('salons').limit(1).get()).docs.length > 0 &&
+        (await db.collection('services').limit(1).get()).docs.length > 0) {
+        seedCompleted = true;
+        return;
+    }
+    isSeeding = true;
+    try {
+        // Салоны
+        const salonsData = [
+            { name: "Beauty Studio 'Элегант'", address: "ул. Ленина, 45", imageUrl: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400&h=300&fit=crop", specializations: ["hair","nails"] },
+            { name: "Spa 'Оазис'", address: "ул. Пушкина, 12", imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=300&fit=crop", specializations: ["massage","cosmetology"] },
+            { name: "Barbershop 'Брутал'", address: "ул. Советская, 23", imageUrl: "https://images.unsplash.com/photo-1503951914875-3c4044a4c7a8?w=400&h=300&fit=crop", specializations: ["barber","hair"] },
+            { name: "Салон 'Шарм'", address: "пр. Мира, 8", imageUrl: "https://images.unsplash.com/photo-1560066984-1385b3ba8e38?w=400&h=300&fit=crop", specializations: ["nails","makeup"] },
+            { name: "Лаборатория красоты", address: "ул. Гагарина, 15", imageUrl: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=400&h=300&fit=crop", specializations: ["cosmetology","hair"] }
+        ];
+        const salonRefs = [];
+        for (const s of salonsData) {
+            const ref = await db.collection('salons').add({
+                name: s.name,
+                address: s.address,
+                imageUrl: s.imageUrl,
+                specializations: s.specializations,
+                rating: 4.2 + Math.random() * 0.8,
+                reviewCount: 0
+            });
+            salonRefs.push({ id: ref.id, name: s.name });
+        }
+        // Услуги
+        const servicesList = [
+            { name: "Стрижка", price: 1500, category: "hair", duration: 60 },
+            { name: "Окрашивание", price: 3500, category: "hair", duration: 120 },
+            { name: "Маникюр", price: 1200, category: "nails", duration: 60 },
+            { name: "Педикюр", price: 1800, category: "nails", duration: 90 },
+            { name: "Чистка лица", price: 2500, category: "cosmetology", duration: 60 },
+            { name: "Массаж спины", price: 2000, category: "massage", duration: 60 },
+            { name: "Бритьё", price: 800, category: "barber", duration: 30 },
+            { name: "Укладка", price: 1200, category: "hair", duration: 45 },
+            { name: "Наращивание ресниц", price: 2200, category: "cosmetology", duration: 90 },
+            { name: "Обёртывание", price: 2800, category: "massage", duration: 90 }
+        ];
+        const serviceDocs = [];
+        for (const salon of salonRefs) {
+            const numServices = 3 + Math.floor(Math.random() * 3);
+            const shuffled = [...servicesList].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < numServices; i++) {
+                const svc = { ...shuffled[i], salonId: salon.id, salonName: salon.name, imageUrl: `https://source.unsplash.com/featured/?${shuffled[i].name.replace(/ /g,',')},beauty&${Math.random()}` };
+                const ref = await db.collection('services').add(svc);
+                serviceDocs.push({ id: ref.id, ...svc });
+            }
+        }
+        // Пользователи
+        const usersToCreate = [
+            { email: "admin@beauty.ru", password: "admin123", name: "Админ", role: "admin", points: 0 },
+            { email: "anna.master@beauty.ru", password: "Master123!", name: "Анна", lastname: "Иванова", role: "master", points: 0 },
+            { email: "elena.master@beauty.ru", password: "Master123!", name: "Елена", lastname: "Петрова", role: "master", points: 0 },
+            { email: "dmitry.master@beauty.ru", password: "Master123!", name: "Дмитрий", lastname: "Сидоров", role: "master", points: 0 },
+            { email: "maria.master@beauty.ru", password: "Master123!", name: "Мария", lastname: "Смирнова", role: "master", points: 0 },
+            { email: "client@beauty.ru", password: "client123", name: "Клиент", lastname: "Основной", role: "client", points: 100 },
+            { email: "olga@mail.ru", password: "client123", name: "Ольга", lastname: "Козлова", role: "client", points: 50 },
+            { email: "ivan@mail.ru", password: "client123", name: "Иван", lastname: "Новиков", role: "client", points: 20 }
+        ];
+        const createdUsers = [];
+        for (const u of usersToCreate) {
+            let uid;
+            try {
+                const existing = await auth.signInWithEmailAndPassword(u.email, u.password).catch(() => null);
+                if (existing) {
+                    uid = existing.user.uid;
+                } else {
+                    const cred = await auth.createUserWithEmailAndPassword(u.email, u.password);
+                    uid = cred.user.uid;
+                    await cred.user.updateProfile({ displayName: u.name });
+                }
+                const userData = {
+                    uid: uid,
+                    email: u.email,
+                    name: u.name,
+                    lastname: u.lastname || '',
+                    role: u.role,
+                    points: u.points,
+                    registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                await db.collection('users').doc(uid).set(userData, { merge: true });
+                createdUsers.push({ uid, ...userData });
+            } catch(e) { console.error("Ошибка создания пользователя", u.email, e); }
+        }
+        // Мастера
+        const mastersData = [
+            { name: "Анна Иванова", userId: createdUsers.find(u => u.email === "anna.master@beauty.ru")?.uid, salonId: salonRefs[0].id, specialization: "Парикмахер-стилист", imageUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
+            { name: "Елена Петрова", userId: createdUsers.find(u => u.email === "elena.master@beauty.ru")?.uid, salonId: salonRefs[1].id, specialization: "Массажист", imageUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
+            { name: "Дмитрий Сидоров", userId: createdUsers.find(u => u.email === "dmitry.master@beauty.ru")?.uid, salonId: salonRefs[2].id, specialization: "Барбер", imageUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
+            { name: "Мария Смирнова", userId: createdUsers.find(u => u.email === "maria.master@beauty.ru")?.uid, salonId: salonRefs[3].id, specialization: "Маникюрный мастер", imageUrl: "https://randomuser.me/api/portraits/women/90.jpg" },
+            { name: "Сергей Козлов", userId: null, salonId: salonRefs[4].id, specialization: "Косметолог", imageUrl: "https://randomuser.me/api/portraits/men/45.jpg" },
+            { name: "Татьяна Власова", userId: null, salonId: salonRefs[0].id, specialization: "Колорист", imageUrl: "https://randomuser.me/api/portraits/women/33.jpg" },
+            { name: "Алексей Морозов", userId: null, salonId: salonRefs[2].id, specialization: "Барбер", imageUrl: "https://randomuser.me/api/portraits/men/22.jpg" },
+            { name: "Ирина Соколова", userId: null, salonId: salonRefs[1].id, specialization: "Косметолог-эстетист", imageUrl: "https://randomuser.me/api/portraits/women/44.jpg" }
+        ];
+        for (const m of mastersData) {
+            let userId = m.userId;
+            if (!userId) {
+                const tempEmail = `master_${Date.now()}_${Math.random().toString(36).substr(2,6)}@temp.com`;
+                const cred = await auth.createUserWithEmailAndPassword(tempEmail, "Master123!");
+                userId = cred.user.uid;
+                await cred.user.updateProfile({ displayName: m.name });
+                await db.collection('users').doc(userId).set({
+                    uid: userId, email: tempEmail, name: m.name, role: "master", points: 0, registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            const salonServices = serviceDocs.filter(s => s.salonId === m.salonId);
+            const providedServices = salonServices.slice(0, 2 + Math.floor(Math.random() * 2)).map(s => s.id);
+            await db.collection('masters').add({
+                name: m.name,
+                salonId: m.salonId,
+                salonName: salonRefs.find(s => s.id === m.salonId).name,
+                userId: userId,
+                specialization: m.specialization,
+                providedServices: providedServices,
+                imageUrl: m.imageUrl,
+                rating: 4.5 + Math.random() * 0.5,
+                daysOff: []
+            });
+        }
+        // Бронирования
+        const bookingsStatuses = ["Новая", "Подтверждена", "Выполнена", "Отменена"];
+        const dates = ["2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05"];
+        const clients = createdUsers.filter(u => u.role === "client");
+        for (let i = 0; i < 12; i++) {
+            const client = clients[i % clients.length];
+            const master = (await db.collection('masters').get()).docs[i % 8];
+            const service = serviceDocs[i % serviceDocs.length];
+            if (!master || !service) continue;
+            await db.collection('bookings').add({
+                userId: client.uid,
+                clientName: client.name,
+                clientPhone: "+79001234567",
+                salonId: service.salonId,
+                salonName: service.salonName,
+                serviceId: service.id,
+                serviceName: service.name,
+                masterId: master.id,
+                masterName: master.data().name,
+                date: dates[i % dates.length],
+                time: `${10 + (i % 10)}:00`,
+                totalPrice: service.price,
+                originalPrice: service.price,
+                pointsUsed: 0,
+                status: bookingsStatuses[i % bookingsStatuses.length],
+                bookingDate: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        // Отзывы
+        const reviewsText = ["Отличный сервис!", "Всё понравилось, приду ещё", "Немного долго, но результат отличный", "Профессионалы своего дела", "Не очень понравилось, но вежливо"];
+        for (let i = 0; i < 15; i++) {
+            const salon = salonRefs[i % salonRefs.length];
+            const client = clients[i % clients.length];
+            await db.collection('reviews').add({
+                salonId: salon.id,
+                salonName: salon.name,
+                userId: client.uid,
+                authorName: client.name,
+                rating: 3 + Math.floor(Math.random() * 3),
+                text: reviewsText[i % reviewsText.length],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        await clearCache();
+        seedCompleted = true;
+        console.log("Seed завершён с реальными данными");
+    } catch (error) { console.error('Ошибка автозаполнения:', error); }
+    finally {
+        isSeeding = false;
+        clearCache();
+        updateAuthUI();
+        if (currentPage) showPage(currentPage);
+    }
+}
+
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 // ==============================================
 // AUTH STATE LISTENER & INIT
 // ==============================================
@@ -3139,7 +4010,10 @@ auth.onAuthStateChanged(async (user) => {
             const doc = await db.collection('users').doc(user.uid).get();
             currentUser = { uid: user.uid, email: user.email, ...(doc.data()||{role:'client'}) };
             localStorage.setItem('beautyUser', JSON.stringify(currentUser));
+<<<<<<< HEAD
             await autoUpdatePastBookings();
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         } catch(e) { currentUser = { uid: user.uid, email: user.email, role:'client' }; }
     } else {
         currentUser = null;
@@ -3166,14 +4040,21 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+<<<<<<< HEAD
     const authTabs = document.querySelectorAll('#auth-modal .auth-tab');
+=======
+    const authTabs = document.querySelectorAll('.auth-tab');
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     authTabs.forEach(tab => {
         tab.onclick = () => {
             const tabName = tab.dataset.tab;
             switchAuthTab(tabName);
         };
     });
+<<<<<<< HEAD
     
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
     const menuToggle = document.getElementById('menuToggle');
     if (menuToggle) {
         menuToggle.addEventListener('click', () => {
@@ -3181,6 +4062,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (nav) nav.classList.toggle('show');
         });
     }
+<<<<<<< HEAD
     
     loadCacheFromLocalStorage();
     if (currentPage) showPage(currentPage);
@@ -3189,6 +4071,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     finally {
         await refreshCache();
         await autoUpdatePastBookings();
+=======
+    try { await seedDataIfEmpty(); }
+    catch (e) { console.error('Ошибка инициализации данных:', e); }
+    finally {
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
         if (currentPage) showPage(currentPage);
     }
 });
@@ -3207,7 +4094,10 @@ window.deleteBookingAdmin = deleteBookingAdmin;
 window.showBookingHistory = showBookingHistory;
 window.deleteReviewAdmin = deleteReviewAdmin;
 window.openEditUser = openEditUser;
+<<<<<<< HEAD
 window.saveUser = saveUser;
+=======
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
 window.deleteUser = deleteUser;
 window.undoAction = undoAction;
 window.fillAdminCreds = fillAdminCreds;
@@ -3216,5 +4106,9 @@ window.fillClientCreds = fillClientCreds;
 window.updateBookingStatusMaster = updateBookingStatusMaster;
 window.openEditMasterProfile = openEditMasterProfile;
 window.addMaster = addMaster;
+<<<<<<< HEAD
 window.resetMasterForm = resetMasterForm;
 window.resetAndReseedAllData = resetAndReseedAllData;
+=======
+window.resetMasterForm = resetMasterForm;
+>>>>>>> cc4ed58c7b8e54b7f242bae16a73a583db3f9393
