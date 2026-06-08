@@ -11,9 +11,6 @@
 </head>
 <body>
 <div id="notification-container"></div>
-<div id="offline-indicator" style="display:none; background:#dc3545; color:white; text-align:center; padding:8px; position:sticky; top:0; z-index:101;">
-    <i class="fas fa-wifi"></i> Режим офлайн. Данные сохранятся локально и синхронизируются при подключении к интернету.
-</div>
 <header>
     <div class="container header-container">
         <a href="#" class="logo" onclick="showPage('home')"><i class="fas fa-spa"></i><span>BeautyBooking</span></a>
@@ -43,53 +40,49 @@
             <div class="footer-section"><h3>BeautyBooking</h3><p>Онлайн-бронирование услуг салонов красоты</p></div>
             <div class="footer-section"><h3>Контакты</h3><p><i class="fas fa-phone"></i> +7 (999) 123-45-67</p></div>
         </div>
-        <div class="copyright">© 2026 BeautyBooking. Все права защищены.</div>
+        <div class="copyright">© 2025 BeautyBooking. Все права защищены.</div>
     </div>
 </footer>
-
-<!-- ========== МОДАЛЬНЫЕ ОКНА (ПОЛНЫЕ) ========== -->
 
 <!-- Auth Modal -->
 <div id="auth-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('auth-modal')">&times;</span>
         <div class="auth-tabs">
             <button class="auth-tab active" data-tab="login">Вход</button>
             <button class="auth-tab" data-tab="register">Регистрация</button>
         </div>
-        <form id="login-form" class="auth-form active">
+        <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
             <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-input" required autocomplete="off"></div>
             <div class="form-group"><label>Пароль</label><input type="password" id="login-password" class="form-input" required autocomplete="off"></div>
             <div class="quick-login-section">
-                <p class="quick-login-title">🔑 Быстрый вход (Демо):</p>
+                <p class="quick-login-title">Быстрый вход (Демо):</p>
                 <div class="quick-login-buttons">
-                    <button type="button" class="btn btn-sm btn-outline quick-btn" onclick="fillAdminCreds()"><i class="fas fa-shield-alt"></i> Админ<br><small>admin@beauty.ru / admin123</small></button>
+                    <button type="button" class="btn btn-sm btn-outline quick-btn" onclick="fillAdminCreds()"><i class="fas fa-shield-alt"></i> Админ</button>
                     <div class="select-wrapper">
                         <select id="master-select-login" class="form-input form-select-sm" onchange="fillMasterCreds(this.value)">
-                            <option value="" disabled selected>🎨 Выбрать мастера...</option>
+                            <option value="" disabled selected>Выбрать мастера...</option>
                         </select>
-                        <small style="display:block; margin-top:4px;">Пароль: <strong>Master123!</strong></small>
                     </div>
                     <div class="select-wrapper">
                         <select id="client-select-login" class="form-input form-select-sm" onchange="fillClientCreds(this.value)">
-                            <option value="" disabled selected>👤 Выбрать клиента...</option>
+                            <option value="" disabled selected>Выбрать клиента...</option>
                         </select>
-                        <small style="display:block; margin-top:4px;">Пароль: <strong>client123</strong></small>
                     </div>
                 </div>
             </div>
-            <div id="login-error" style="display:none;color:red;margin:10px 0;">Неверные данные!</div>
+            <div id="login-error" class="error-message" style="display:none;"></div>
             <button type="submit" class="btn btn-primary btn-block">Войти</button>
-            <div class="auth-switch">Нет аккаунта? <a href="#" id="switch-to-register">Регистрация</a></div>
+            <div class="auth-switch">Нет аккаунта? <a href="#" onclick="switchAuthTab('register'); return false;">Регистрация</a></div>
         </form>
-        <form id="register-form" class="auth-form">
+        <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
             <div class="form-group"><label>Имя</label><input type="text" id="reg-name" class="form-input" required></div>
-            <div class="form-group"><label>Фамилия</label><input type="text" id="reg-lastname" class="form-input"></div>
             <div class="form-group"><label>Email</label><input type="email" id="reg-email" class="form-input" required></div>
             <div class="form-group"><label>Пароль</label><input type="password" id="reg-pass" class="form-input" required minlength="6"></div>
             <div class="form-group"><label>Телефон</label><input type="tel" id="reg-phone" class="form-input"></div>
+            <div id="register-error" class="error-message" style="display:none;"></div>
             <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
-            <div class="auth-switch">Уже есть аккаунт? <a href="#" id="switch-to-login">Войти</a></div>
+            <div class="auth-switch">Уже есть аккаунт? <a href="#" onclick="switchAuthTab('login'); return false;">Войти</a></div>
         </form>
     </div>
 </div>
@@ -97,9 +90,9 @@
 <!-- Edit Profile Modal -->
 <div id="edit-profile-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('edit-profile-modal')">&times;</span>
         <h2>Редактирование профиля</h2>
-        <form id="edit-profile-form">
+        <form id="edit-profile-form" onsubmit="saveProfileChanges(event)">
             <div class="form-group"><label>Имя</label><input type="text" id="edit-name" class="form-input" required></div>
             <div class="form-group"><label>Фамилия</label><input type="text" id="edit-lastname" class="form-input"></div>
             <div class="form-group"><label>Телефон</label><input type="tel" id="edit-phone" class="form-input"></div>
@@ -115,12 +108,12 @@
 <!-- Site Settings Modal (Admin) -->
 <div id="site-settings-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('site-settings-modal')">&times;</span>
         <h2>Настройки главной страницы</h2>
         <form id="site-settings-form">
-            <div class="form-group"><label>Заголовок Hero</label><input type="text" id="set-hero-title" class="form-input" placeholder="Текущий заголовок"></div>
-            <div class="form-group"><label>Подзаголовок</label><input type="text" id="set-hero-subtitle" class="form-input" placeholder="Текущий подзаголовок"></div>
-            <div class="form-group"><label>URL изображения</label><input type="url" id="set-hero-image" class="form-input" placeholder="Текущий URL"></div>
+            <div class="form-group"><label>Заголовок Hero</label><input type="text" id="set-hero-title" class="form-input"></div>
+            <div class="form-group"><label>Подзаголовок</label><input type="text" id="set-hero-subtitle" class="form-input"></div>
+            <div class="form-group"><label>URL изображения</label><input type="url" id="set-hero-image" class="form-input"></div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('site-settings-modal')">Отмена</button>
                 <button type="submit" class="btn btn-primary">Сохранить</button>
@@ -132,7 +125,7 @@
 <!-- Salon Modal -->
 <div id="salon-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('salon-modal')">&times;</span>
         <h2 id="salon-modal-title">Добавить салон</h2>
         <form id="salon-form">
             <input type="hidden" id="sal-id">
@@ -140,8 +133,8 @@
             <div class="form-group"><label>Адрес</label><input type="text" id="sal-address" class="form-input" required></div>
             <div class="form-group"><label>Фото URL</label><input type="url" id="sal-image" class="form-input" placeholder="https://..."></div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="cancel-sal">Отмена</button>
-                <button type="submit" class="btn btn-primary" id="save-sal">Сохранить</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('salon-modal')">Отмена</button>
+                <button type="button" class="btn btn-primary" id="save-sal">Сохранить</button>
             </div>
         </form>
     </div>
@@ -150,7 +143,7 @@
 <!-- Service Modal -->
 <div id="service-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('service-modal')">&times;</span>
         <h2 id="service-modal-title">Добавить услугу</h2>
         <form id="service-form">
             <input type="hidden" id="serv-id">
@@ -168,9 +161,10 @@
                 <div class="form-group"><label>Цена (₽)</label><input type="number" id="serv-price" class="form-input" required min="0"></div>
             </div>
             <div class="form-group"><label>Салон</label><select id="serv-salon" class="form-input" required></select></div>
+            <div class="form-group"><label>Фото URL</label><input type="url" id="serv-image" class="form-input" placeholder="https://..."></div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="cancel-serv">Отмена</button>
-                <button type="submit" class="btn btn-primary" id="save-serv">Сохранить</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('service-modal')">Отмена</button>
+                <button type="button" class="btn btn-primary" id="save-serv">Сохранить</button>
             </div>
         </form>
     </div>
@@ -179,7 +173,7 @@
 <!-- Master Modal -->
 <div id="master-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('master-modal')">&times;</span>
         <h2 id="master-modal-title">Добавить мастера</h2>
         <form id="master-form">
             <input type="hidden" id="mast-id">
@@ -192,7 +186,7 @@
             <div class="form-group"><label>Фото URL</label><input type="url" id="mast-image" class="form-input" placeholder="https://..."></div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="cancel-mast">Отмена</button>
-                <button type="submit" class="btn btn-primary" id="save-mast">Сохранить</button>
+                <button type="button" class="btn btn-primary" id="save-mast">Сохранить</button>
             </div>
         </form>
     </div>
@@ -201,9 +195,9 @@
 <!-- Edit User Modal (Admin) -->
 <div id="edit-user-modal" class="modal">
     <div class="modal-content">
-        <span class="modal-close">&times;</span>
+        <span class="modal-close" onclick="closeModal('edit-user-modal')">&times;</span>
         <h2 class="modal-title">Добавить пользователя</h2>
-        <form id="edit-user-form">
+        <form id="edit-user-form" onsubmit="saveUser(event)">
             <input type="hidden" id="edit-user-id">
             <div class="form-group"><label>Имя *</label><input type="text" id="edit-user-name" class="form-input" required></div>
             <div class="form-group"><label>Фамилия</label><input type="text" id="edit-user-lastname" class="form-input"></div>
@@ -216,50 +210,21 @@
                     <option value="admin">Администратор</option>
                 </select>
             </div>
-            <div id="edit-user-password-group" class="form-group" style="display: block;">
+            <div id="edit-user-password-group" class="form-group" style="display: none;">
                 <label>Пароль (мин. 6 символов, только для нового пользователя)</label>
                 <input type="password" id="edit-user-password" class="form-input" minlength="6">
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="cancel-edit-user">Отмена</button>
-                <button type="submit" class="btn btn-primary" id="save-edit-user">Сохранить</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-user-modal')">Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
             </div>
         </form>
-    </div>
-</div>
-
-<!-- Review Detail Modal (для клиента) -->
-<div id="review-detail-modal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close">&times;</span>
-        <h2>Детали отзыва</h2>
-        <div id="review-detail-content"></div>
-        <div class="modal-actions">
-            <button class="btn btn-danger" id="delete-review-confirm">Удалить отзыв</button>
-            <button class="btn btn-secondary" onclick="closeModal('review-detail-modal')">Закрыть</button>
-        </div>
-    </div>
-</div>
-
-<!-- Rebooking Modal (повторная запись) -->
-<div id="rebooking-modal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close">&times;</span>
-        <h2>Повторная запись</h2>
-        <div id="rebooking-content"></div>
-        <div class="modal-actions">
-            <button class="btn btn-primary" id="confirm-rebooking">Записаться снова</button>
-            <button class="btn btn-secondary" onclick="closeModal('rebooking-modal')">Отмена</button>
-        </div>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script>
-    // if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.log);
-</script>
 <script src="app.js"></script>
 </body>
 </html>

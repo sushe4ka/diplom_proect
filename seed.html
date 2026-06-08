@@ -91,15 +91,24 @@
 </head>
 <body>
 <div class="container">
-    <h1>🌱 Seed базы данных</h1>
+    <h1>🌱 Seed базы данных (расширенный)</h1>
     <div class="warning">
         ⚠️ <strong>Важно!</strong> Нажатие кнопки <strong>«Очистить и заполнить БД»</strong> удалит все существующие данные
         в коллекциях: <code>salons, services, masters, bookings, reviews, admin_actions, users</code>.<br>
-        После очистки будут созданы тестовые сущности.<br>
+        Будут созданы:
+        <ul style="margin-top:8px; margin-bottom:0;">
+            <li><strong>10 салонов</strong> красоты</li>
+            <li><strong>2–4 мастера на каждый салон</strong> (всего ~30 мастеров) с реальными именами и фамилиями</li>
+            <li><strong>1–3 услуги на каждого мастера</strong> (услуги привязаны к мастеру)</li>
+            <li><strong>5–10 самозанятых мастеров</strong> (без салона, работают на себя, со своими услугами) – реальные имена</li>
+            <li><strong>10 клиентов</strong> + администратор</li>
+            <li><strong>Отзывы и бронирования</strong> (50 записей)</li>
+        </ul>
         <strong style="display:inline-block; margin-top:8px;">🔐 Тестовые учётные записи:</strong><br>
         • Администратор: <code>admin@beauty.ru</code> / <code>admin123</code><br>
-        • Клиенты: <code>client1@example.com</code> … <code>client5@example.com</code> (пароль <code>client123</code>)<br>
-        • Мастера: <code>master1@beauty.ru</code> … <code>master5@beauty.ru</code> (пароль <code>Master123!</code>)
+        • Клиенты: <code>client1@example.com</code> … <code>client10@example.com</code> (пароль <code>client123</code>)<br>
+        • Мастера (салонные): <code>salon_master1@beauty.ru</code> … <code>salon_master40@beauty.ru</code> (пароль <code>Master123!</code>)<br>
+        • Самозанятые: <code>freelance1@beauty.ru</code> … <code>freelance10@beauty.ru</code> (пароль <code>Master123!</code>)
     </div>
     <div class="flex">
         <button id="seedBtn">🌱 Очистить и заполнить БД</button>
@@ -132,7 +141,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ==================== ЛОГИРОВАНИЕ ====================
     const logDiv = document.getElementById('log');
     function log(msg, isError = false) {
         const line = document.createElement('div');
@@ -159,30 +167,27 @@
         }
     }
 
-    // ==================== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ (Firebase Auth + Firestore) ====================
-    async function ensureUser(email, name, role, password) {
+    // ==================== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ ====================
+    async function ensureUser(email, firstName, lastName, role, password, points = 0) {
         try {
-            // Пытаемся создать
             let userCred;
             try {
                 userCred = await auth.createUserWithEmailAndPassword(email, password);
             } catch (createErr) {
                 if (createErr.code === 'auth/email-already-in-use') {
-                    // Входим с указанным паролем
                     userCred = await auth.signInWithEmailAndPassword(email, password);
                 } else {
                     throw createErr;
                 }
             }
             const uid = userCred.user.uid;
-            const [firstName, lastName] = name.split(' ');
             const userData = {
                 uid,
                 email,
-                name: firstName || name,
-                lastname: lastName || '',
+                name: firstName,
+                lastname: lastName,
                 role,
-                points: role === 'client' ? 100 : 0,
+                points: role === 'client' ? points : 0,
                 registrationDate: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection('users').doc(uid).set(userData, { merge: true });
@@ -194,6 +199,22 @@
         }
     }
 
+    // ==================== СОЗДАНИЕ УСЛУГИ ====================
+    async function createService(name, category, price, duration, masterId, salonId = null, salonName = null) {
+        const serviceData = {
+            name,
+            category,
+            price,
+            duration,
+            masterId,
+            salonId,
+            salonName,
+            imageUrl: `https://picsum.photos/seed/service_${Date.now()}_${Math.random()}/400/300`
+        };
+        const ref = await db.collection('services').add(serviceData);
+        return { id: ref.id, ...serviceData };
+    }
+
     // ==================== ОСНОВНОЙ SEED ====================
     async function runSeed() {
         if (!confirm('Это удалит все данные в коллекциях (салоны, услуги, мастера, бронирования, отзывы). Продолжить?')) return;
@@ -201,58 +222,59 @@
         log('🔄 Начинаем очистку коллекций...');
         await clearCollections();
 
-        log('📦 Создаём салоны...');
-        // 5 салонов
+        // ========== 1. Создаём 10 салонов ==========
+        log('📦 Создаём 10 салонов...');
         const salonNames = [
-            "Beauty Studio 'Элегант'",
-            "Spa 'Оазис'",
-            "Barbershop 'Брутал'",
-            "Салон 'Шарм'",
-            "Лаборатория красоты"
+            "Beauty Studio 'Элегант'", "Spa 'Оазис'", "Barbershop 'Брутал'", "Салон 'Шарм'", "Лаборатория красоты",
+            "Студия 'Имидж'", "Центр красоты 'Афродита'", "Салон 'Престиж'", "Beauty House", "Салон 'Люкс'"
         ];
         const addresses = [
-            "ул. Ленина, 45",
-            "ул. Пушкина, 12",
-            "ул. Советская, 23",
-            "пр. Мира, 8",
-            "ул. Гагарина, 15"
+            "ул. Ленина, 45", "ул. Пушкина, 12", "ул. Советская, 23", "пр. Мира, 8", "ул. Гагарина, 15",
+            "ул. Кирова, 10", "ул. Лермонтова, 5", "ул. Чехова, 20", "ул. Толстого, 3", "ул. Достоевского, 7"
         ];
-        const districts = ["center", "south", "north", "east", "west"];
+        const districts = ["center", "south", "north", "east", "west", "center", "south", "north", "east", "west"];
         const descriptions = [
-            "Премиум салон красоты с широким спектром услуг",
-            "Релакс и здоровье для вашего тела",
-            "Мужской стиль и качественные стрижки",
-            "Женская красота и уход",
-            "Инновационные процедуры и уход за лицом"
+            "Премиум салон красоты с широким спектром услуг", "Релакс и здоровье для вашего тела",
+            "Мужской стиль и качественные стрижки", "Женская красота и уход", "Инновационные процедуры и уход за лицом",
+            "Стиль и красота для каждого", "Афродита – божественный уход", "Престиж и качество", "Дом красоты", "Роскошный отдых"
         ];
         const specializationsList = [
-            ['hair', 'nails'],
-            ['massage', 'cosmetology'],
-            ['barber'],
-            ['hair', 'makeup'],
-            ['cosmetology', 'nails']
+            ['hair','nails'], ['massage','cosmetology'], ['barber'], ['hair','makeup'], ['cosmetology','nails'],
+            ['hair','massage'], ['nails','barber'], ['cosmetology','hair'], ['massage','nails'], ['barber','cosmetology']
         ];
-
         const salonRefs = [];
         for (let i = 0; i < salonNames.length; i++) {
             const ref = await db.collection('salons').add({
                 name: salonNames[i],
                 address: addresses[i],
                 district: districts[i],
-                description: descriptions[i],
+                description: descriptions[i % descriptions.length],
                 specializations: specializationsList[i],
                 imageUrl: `https://picsum.photos/seed/salon${i+1}/600/400`,
                 rating: 4.2 + Math.random() * 0.7,
                 reviewCount: 0,
                 averagePrice: 1500 + Math.random() * 3000
             });
-            salonRefs.push(ref);
+            salonRefs.push({ id: ref.id, name: salonNames[i] });
             log(`   ➕ Салон "${salonNames[i]}" добавлен (id: ${ref.id})`);
         }
 
-        log('💇‍♀️ Создаём услуги (категории: hair, nails, cosmetology, massage, barber)...');
+        // ========== 2. Создаём салонных мастеров и их услуги ==========
+        log('👥 Создаём салонных мастеров (по 2-4 на салон) и их услуги...');
+        // Массивы реальных имён и фамилий (для салонных мастеров)
+        const firstNames = [
+            "Анна", "Мария", "Екатерина", "Ольга", "Татьяна", "Наталья", "Ирина", "Светлана", "Юлия", "Елена",
+            "Александр", "Дмитрий", "Сергей", "Андрей", "Алексей", "Владимир", "Николай", "Иван", "Максим", "Евгений",
+            "Виктория", "Ксения", "Полина", "Анастасия", "Дарья"
+        ];
+        const lastNames = [
+            "Иванова", "Петрова", "Сидорова", "Кузнецова", "Смирнова", "Васильева", "Михайлова", "Новикова", "Фёдорова", "Морозова",
+            "Иванов", "Петров", "Сидоров", "Кузнецов", "Смирнов", "Васильев", "Михайлов", "Новиков", "Фёдоров", "Морозов",
+            "Волкова", "Алексеева", "Лебедева", "Соколова", "Орлова"
+        ];
+        let masterCounter = 0;
         const categories = ['hair', 'nails', 'cosmetology', 'massage', 'barber'];
-        const serviceNamesByCat = {
+        const serviceNamePool = {
             hair: ['Стрижка', 'Окрашивание', 'Укладка', 'Лечение волос', 'Биозавивка'],
             nails: ['Маникюр', 'Педикюр', 'Наращивание ногтей', 'Гель-лак', 'Дизайн ногтей'],
             cosmetology: ['Чистка лица', 'Пилинг', 'Уход за кожей', 'Ботокс для лица', 'Массаж лица'],
@@ -260,123 +282,170 @@
             barber: ['Мужская стрижка', 'Моделирование бороды', 'Бритье', 'Камуфляж седины', 'Стрижка машинкой']
         };
         const basePrices = { hair: 1500, nails: 1200, cosmetology: 2500, massage: 2000, barber: 1000 };
-        const servicesPerSalon = [];
+        const durations = { hair: 60, nails: 60, cosmetology: 60, massage: 60, barber: 45 };
+
+        const allMasters = []; // { id, name, userId, salonId, salonName, services[] }
 
         for (let sIdx = 0; sIdx < salonRefs.length; sIdx++) {
-            const salonId = salonRefs[sIdx].id;
-            const salonName = salonNames[sIdx];
-            const salonServices = [];
-            for (let catIdx = 0; catIdx < categories.length; catIdx++) {
-                const cat = categories[catIdx];
-                const serviceName = serviceNamesByCat[cat][sIdx % 5];
-                const price = basePrices[cat] + (sIdx * 50);
-                const duration = (cat === 'massage' ? 30 : 60);
-                const serviceRef = await db.collection('services').add({
-                    name: serviceName,
-                    category: cat,
-                    price: price,
-                    duration: duration,
-                    salonId: salonId,
-                    salonName: salonName,
-                    imageUrl: `https://picsum.photos/seed/${salonId}_${cat}/400/300`
-                });
-                salonServices.push({ id: serviceRef.id, name: serviceName, category: cat, price: price });
-            }
-            servicesPerSalon.push(salonServices);
-            log(`   ➕ Для салона "${salonName}" добавлено 5 услуг`);
-        }
+            const salon = salonRefs[sIdx];
+            const numMasters = 2 + Math.floor(Math.random() * 3); // 2,3,4
+            for (let m = 0; m < numMasters; m++) {
+                // Берём реальное имя и фамилию по кругу
+                const firstName = firstNames[masterCounter % firstNames.length];
+                const lastName = lastNames[masterCounter % lastNames.length];
+                const fullName = `${firstName} ${lastName}`;
+                const email = `salon_master${masterCounter+1}@beauty.ru`;
+                const userId = await ensureUser(email, firstName, lastName, 'master', 'Master123!');
+                if (!userId) continue;
 
-        log('👥 Создаём пользователей (admin, мастера, клиенты)...');
-        // Администратор
-        await ensureUser('admin@beauty.ru', 'Администратор', 'admin', 'admin123');
-
-        // Мастера (5 мастеров, каждый привязан к одному из салонов)
-        const masterNames = ["Анна Иванова", "Сергей Кузнецов", "Екатерина Соколова", "Дмитрий Попов", "Мария Фёдорова"];
-        const masterEmails = ["master1@beauty.ru", "master2@beauty.ru", "master3@beauty.ru", "master4@beauty.ru", "master5@beauty.ru"];
-        const masterSalonIndices = [0, 1, 2, 3, 4]; // каждый мастер в своём салоне
-        const masterUids = [];
-        for (let i = 0; i < masterNames.length; i++) {
-            const uid = await ensureUser(masterEmails[i], masterNames[i], 'master', 'Master123!');
-            if (uid) masterUids.push(uid);
-        }
-
-        // Клиенты (5 клиентов)
-        const clientNames = ["Анна", "Мария", "Сергей", "Елена", "Ольга"];
-        const clientEmails = ["client1@example.com", "client2@example.com", "client3@example.com", "client4@example.com", "client5@example.com"];
-        const clientUids = [];
-        for (let i = 0; i < clientNames.length; i++) {
-            const uid = await ensureUser(clientEmails[i], clientNames[i], 'client', 'client123');
-            if (uid) clientUids.push(uid);
-        }
-        // дополнительный клиент client@beauty.ru
-        await ensureUser('client@beauty.ru', 'Тестовый Клиент', 'client', 'client123');
-
-        log('🧑‍🔧 Создаём документы мастеров (связь с услугами и салонами)...');
-        const mastersBatch = db.batch();
-        let masterCounter = 0;
-        for (let sIdx = 0; sIdx < salonRefs.length; sIdx++) {
-            const salonId = salonRefs[sIdx].id;
-            const salonName = salonNames[sIdx];
-            const services = servicesPerSalon[sIdx];
-            for (let m = 0; m < 2; m++) { // по 2 мастера на салон (итого 10)
-                const masterIdx = masterCounter % masterNames.length;
-                const masterName = masterNames[masterIdx];
-                const masterEmail = masterEmails[masterIdx];
-                // найдём userId
-                const usersSnap = await db.collection('users').where('email', '==', masterEmail).get();
-                const userId = usersSnap.docs[0]?.id || null;
-                const numServices = Math.min(services.length, 2 + (m % 3));
-                const providedServiceIds = services.slice(0, numServices).map(s => s.id);
-                const specialization = providedServiceIds.map(id => services.find(s => s.id === id)?.name).join(', ');
-                const masterRef = db.collection('masters').doc();
-                mastersBatch.set(masterRef, {
-                    name: masterName,
-                    salonId: salonId,
-                    salonName: salonName,
-                    specialization: specialization,
-                    providedServices: providedServiceIds,
+                const numServices = 1 + Math.floor(Math.random() * 3);
+                const selectedCategories = [];
+                for (let i = 0; i < numServices; i++) {
+                    let cat;
+                    do { cat = categories[Math.floor(Math.random() * categories.length)]; } while (selectedCategories.includes(cat) && selectedCategories.length < categories.length);
+                    selectedCategories.push(cat);
+                }
+                const masterServices = [];
+                for (let i = 0; i < selectedCategories.length; i++) {
+                    const cat = selectedCategories[i];
+                    const serviceNameList = serviceNamePool[cat];
+                    const serviceName = serviceNameList[Math.floor(Math.random() * serviceNameList.length)];
+                    const price = basePrices[cat] + Math.floor(Math.random() * 500);
+                    const duration = durations[cat];
+                    const serviceData = {
+                        name: serviceName,
+                        category: cat,
+                        price: price,
+                        duration: duration,
+                        salonId: salon.id,
+                        salonName: salon.name,
+                        masterId: null,
+                        imageUrl: `https://picsum.photos/seed/master_${masterCounter+1}_${cat}/400/300`
+                    };
+                    const serviceRef = await db.collection('services').add(serviceData);
+                    masterServices.push({ id: serviceRef.id, name: serviceName, price, category: cat, duration });
+                }
+                const masterRef = await db.collection('masters').add({
+                    name: fullName,
+                    salonId: salon.id,
+                    salonName: salon.name,
+                    specialization: masterServices.map(s => s.name).join(', '),
+                    providedServices: masterServices.map(s => s.id),
                     rating: 4 + Math.random() * 0.9,
                     imageUrl: `https://picsum.photos/seed/master${masterCounter+1}/300/300`,
                     daysOff: [],
                     userId: userId,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                for (const s of masterServices) {
+                    await db.collection('services').doc(s.id).update({ masterId: masterRef.id });
+                }
+                allMasters.push({ id: masterRef.id, name: fullName, userId, salonId: salon.id, salonName: salon.name, services: masterServices });
+                log(`   ➕ Мастер "${fullName}" (салон ${salon.name}) с ${numServices} услугами`);
                 masterCounter++;
             }
         }
-        await mastersBatch.commit();
-        log(`✅ Создано ${masterCounter} мастеров`);
+        log(`✅ Создано ${allMasters.length} салонных мастеров`);
 
-        log('📝 Создаём отзывы (по 2–4 на салон)...');
-        const reviewTexts = [
-            "Отлично! Обязательно приду ещё.",
-            "Хороший салон, вежливый персонал.",
-            "Нормально, но есть куда расти.",
-            "Восторг! Лучший мастер!",
-            "Рекомендую всем знакомым.",
-            "Приятная атмосфера, чисто и уютно.",
-            "Спасибо мастеру, очень профессионально."
+        // ========== 3. Создаём самозанятых мастеров (без салона) ==========
+        log('👤 Создаём самозанятых мастеров (5-10 человек)...');
+        const freelanceCount = 5 + Math.floor(Math.random() * 6); // 5-10
+        const freelanceFirstNames = [
+            "Алина", "Виктор", "Елена", "Дмитрий", "Ольга", "Сергей", "Мария", "Андрей", "Наталья", "Иван",
+            "Ксения", "Павел", "Юлия", "Алексей", "Татьяна"
         ];
-        const users = (await db.collection('users').get()).docs.map(d => ({ uid: d.id, ...d.data() }));
-        const clientsList = users.filter(u => u.role === 'client');
+        const freelanceLastNames = [
+            "Косметолог", "Парикмахер", "Массажист", "Барбер", "Маникюрша", "Стилист", "Визажист", "Ногтевой", "Косметолог", "Массажист",
+            "Бровист", "Стриж", "Шугаринг", "Лэшмейкер", "Тейпист"
+        ];
+        for (let i = 0; i < freelanceCount; i++) {
+            const firstName = freelanceFirstNames[i % freelanceFirstNames.length];
+            const lastName = freelanceLastNames[i % freelanceLastNames.length] + (i+1);
+            const fullName = `${firstName} ${lastName}`;
+            const email = `freelance${i+1}@beauty.ru`;
+            const userId = await ensureUser(email, firstName, lastName, 'master', 'Master123!');
+            if (!userId) continue;
+
+            const numServices = 1 + Math.floor(Math.random() * 3);
+            const masterServices = [];
+            for (let s = 0; s < numServices; s++) {
+                const cat = categories[Math.floor(Math.random() * categories.length)];
+                const serviceNameList = serviceNamePool[cat];
+                const serviceName = serviceNameList[Math.floor(Math.random() * serviceNameList.length)];
+                const price = basePrices[cat] + Math.floor(Math.random() * 500);
+                const duration = durations[cat];
+                const serviceData = {
+                    name: serviceName,
+                    category: cat,
+                    price: price,
+                    duration: duration,
+                    salonId: null,
+                    salonName: null,
+                    masterId: null,
+                    imageUrl: `https://picsum.photos/seed/freelance_${i+1}_${cat}/400/300`
+                };
+                const serviceRef = await db.collection('services').add(serviceData);
+                masterServices.push({ id: serviceRef.id, name: serviceName, price, category: cat, duration });
+            }
+            const masterRef = await db.collection('masters').add({
+                name: fullName,
+                salonId: null,
+                salonName: null,
+                specialization: masterServices.map(s => s.name).join(', '),
+                providedServices: masterServices.map(s => s.id),
+                rating: 4 + Math.random() * 0.9,
+                imageUrl: `https://picsum.photos/seed/freelance${i+1}/300/300`,
+                daysOff: [],
+                userId: userId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            for (const s of masterServices) {
+                await db.collection('services').doc(s.id).update({ masterId: masterRef.id });
+            }
+            allMasters.push({ id: masterRef.id, name: fullName, userId, salonId: null, salonName: null, services: masterServices });
+            log(`   ➕ Самозанятый мастер "${fullName}" с ${numServices} услугами`);
+        }
+        log(`✅ Создано ${freelanceCount} самозанятых мастеров`);
+
+        // ========== 4. Создаём клиентов ==========
+        log('👥 Создаём клиентов...');
+        const clientFirstNames = ["Анна", "Мария", "Сергей", "Елена", "Ольга", "Иван", "Татьяна", "Алексей", "Наталья", "Дмитрий"];
+        const clientLastNames = ["Смирнова", "Кузнецова", "Попов", "Соколова", "Лебедева", "Козлов", "Новикова", "Морозов", "Волкова", "Зайцев"];
+        for (let i = 0; i < 10; i++) {
+            const email = `client${i+1}@example.com`;
+            const firstName = clientFirstNames[i % clientFirstNames.length];
+            const lastName = clientLastNames[i % clientLastNames.length];
+            await ensureUser(email, firstName, lastName, 'client', 'client123', 100);
+        }
+        await ensureUser('client@beauty.ru', 'Тестовый', 'Клиент', 'client', 'client123', 100);
+        await ensureUser('admin@beauty.ru', 'Администратор', '', 'admin', 'admin123', 0);
+        log(`✅ Клиенты созданы`);
+
+        // ========== 5. Создаём отзывы ==========
+        log('📝 Создаём отзывы (по 2-4 на салон)...');
+        const reviewTexts = [
+            "Отлично! Обязательно приду ещё.", "Хороший салон, вежливый персонал.", "Нормально, но есть куда расти.",
+            "Восторг! Лучший мастер!", "Рекомендую всем знакомым.", "Приятная атмосфера, чисто и уютно.",
+            "Спасибо мастеру, очень профессионально.", "Не очень понравилось, долго ждал.", "Цены высоковаты, но качество хорошее."
+        ];
+        const users = (await db.collection('users').where('role', '==', 'client').get()).docs.map(d => ({ uid: d.id, ...d.data() }));
         for (let sIdx = 0; sIdx < salonRefs.length; sIdx++) {
             const salonId = salonRefs[sIdx].id;
-            const salonName = salonNames[sIdx];
+            const salonName = salonRefs[sIdx].name;
             const numReviews = 2 + Math.floor(Math.random() * 3);
             for (let r = 0; r < numReviews; r++) {
-                const author = clientsList[r % clientsList.length];
+                const author = users[r % users.length];
                 const rating = parseFloat((3 + Math.random() * 2).toFixed(1));
                 await db.collection('reviews').add({
                     salonId: salonId,
                     salonName: salonName,
                     userId: author?.uid || null,
-                    authorName: author?.name || 'Гость',
+                    authorName: author?.name ? `${author.name} ${author.lastname || ''}`.trim() : 'Гость',
                     rating: rating,
                     text: reviewTexts[(sIdx + r) % reviewTexts.length],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
-            // обновим рейтинг салона
             const reviewsSnap = await db.collection('reviews').where('salonId', '==', salonId).get();
             let totalRating = 0;
             reviewsSnap.forEach(doc => totalRating += doc.data().rating);
@@ -388,15 +457,14 @@
         }
         log('✅ Отзывы созданы, рейтинги салонов обновлены');
 
-        log('📅 Создаём тестовые бронирования (30 записей)...');
-        const allMasters = (await db.collection('masters').get()).docs.map(d => ({ id: d.id, ...d.data() }));
-        const allServices = (await db.collection('services').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+        // ========== 6. Создаём бронирования ==========
+        log('📅 Создаём тестовые бронирования (50 записей)...');
         const allClients = (await db.collection('users').where('role', '==', 'client').get()).docs.map(d => ({ id: d.id, ...d.data() }));
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 50; i++) {
             const client = allClients[i % allClients.length];
             const master = allMasters[i % allMasters.length];
-            const service = allServices.find(s => s.id === master.providedServices?.[0]);
-            if (!service || !client) continue;
+            const service = master.services[i % master.services.length];
+            if (!client || !service) continue;
             const bookingDate = new Date();
             bookingDate.setDate(bookingDate.getDate() + (i % 14));
             const dateStr = bookingDate.toISOString().split('T')[0];
@@ -419,16 +487,16 @@
                 originalPrice: service.price,
                 pointsUsed: 0,
                 status: status,
-                clientName: client.name || 'Клиент',
+                clientName: client.name ? `${client.name} ${client.lastname || ''}`.trim() : 'Клиент',
                 clientPhone: '+7XXXXXXXXXX',
                 clientComment: '',
                 bookingDate: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
-        log('✅ 30 бронирований созданы');
+        log('✅ 50 бронирований созданы');
 
         log('🎉 SEED ЗАВЕРШЁН УСПЕШНО!');
-        log('💡 Теперь вы можете закрыть эту страницу и открыть index.html через Live Server.');
+        log('💡 Теперь вы можете закрыть эту страницу и открыть index.html.');
     }
 
     // ==================== ТОЛЬКО ОЧИСТКА ====================
@@ -439,7 +507,6 @@
         }
     }
 
-    // ==================== НАВЕШИВАНИЕ КНОПОК ====================
     document.getElementById('seedBtn').onclick = runSeed;
     document.getElementById('clearBtn').onclick = clearOnly;
 </script>
